@@ -10,7 +10,7 @@ namespace _051colormap
     /// </summary>
     public static void InitForm (out string author)
     {
-      author = "Josef Pelikán";
+      author = "Lukáš Macek";
     }
 
     /// <summary>
