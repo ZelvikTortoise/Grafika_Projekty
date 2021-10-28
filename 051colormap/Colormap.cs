@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using MathSupport;
 
@@ -19,6 +20,20 @@ namespace _051colormap
         int[] centroidTotalB;
         Color[] centroids;
 
+        private Color[] GetUsedCentroids()
+        {
+            List<Color> usedColor = new List<Color>();
+
+            for (int i = 0; i < centroids.Length; i++)
+            {
+                if (CentroidValid(i))
+                {
+                    usedColor.Add(centroids[i]);
+                }
+            }
+
+            return usedColor.ToArray();
+        }
 
         public void OrderCentroids()
         {
@@ -42,7 +57,90 @@ namespace _051colormap
 
         public void UseFreeCentroids()
         {
-            // TODO
+            byte total = (byte)centroids.Length;
+            byte free = freeCentroids;
+            byte used = (byte)(total - free);
+
+            Color[] usedCentroids = GetUsedCentroids();
+
+            if (used == 1)
+            {
+                int r = usedCentroids[0].R;
+                int g = usedCentroids[0].G;
+                int b = usedCentroids[0].B;
+                int newR, newG, newB;
+                int dr = 5;
+                int dg = 5;
+                int db = 5;
+
+                int invalidIndex = 0;
+                int mutliplier = 1;
+                bool failed = false;
+                for (int i = 0; i < free; i++)
+                {
+                    newR = r + dr * mutliplier;        
+                    newG = g + dg * mutliplier;
+                    newB = b + db * mutliplier;
+
+                    if (newR < 0 || newR > 255 || newG < 0 || newG > 255 || newB < 0 || newB > 255)
+                    {
+                        if (failed)
+                        {
+                            mutliplier = 0;
+                        }
+                        else
+                        {
+                            failed = true;
+                        }
+                        i--;
+                    }
+                    else
+                    {
+                        failed = false;
+
+                        while (CentroidValid(invalidIndex))
+                        {
+                            invalidIndex++;
+                        }
+                        centroids[invalidIndex] = Color.FromArgb((int)newR, (int)newG, (int)newB);
+                        invalidIndex++;
+                    }                                        
+
+                    mutliplier *= -1;
+                    if (mutliplier > 0)
+                    {
+                        mutliplier++;
+                    }
+                }
+            }
+            else if (used == 2)
+            {
+                float r = usedCentroids[0].R;
+                float g = usedCentroids[0].G;
+                float b = usedCentroids[0].B;
+                float dr = (usedCentroids[1].R - r) / (total - 1.0f);
+                float dg = (usedCentroids[1].G - g) / (total - 1.0f);
+                float db = (usedCentroids[1].B - b) / (total - 1.0f);
+
+                int invalidIndex = 0;
+                for (int i = 0; i < free; i++)
+                {
+                    r += dr;
+                    g += dg;
+                    b += db;
+
+                    while (CentroidValid(invalidIndex))
+                    {
+                        invalidIndex++;
+                    }
+                    centroids[invalidIndex] = Color.FromArgb((int)r, (int)g, (int)b);
+                    invalidIndex++;                 
+                }
+            }
+            else
+            {
+                // TODO
+            }
         }
 
         public void MoveCentroid(int centroidIndex)
@@ -267,9 +365,6 @@ namespace _051colormap
             kms.OrderCentroids();
 
             centroids = kms.GetCentroids();
-
-            // Asigning "nullColor":
-            // centroids[k] = Color.FromArgb(0, 0, 0, 0);  // A = 0
 
             /*
             // color-ramp linear interpolation:
