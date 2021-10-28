@@ -22,7 +22,22 @@ namespace _051colormap
 
         public void OrderCentroids()
         {
-            // TODO
+            Color[] newCentroids = new Color[centroids.Length];
+            int indexDarkest;
+
+            for (int i = 0; i < centroids.Length; i++)
+            {
+                CalculateDistance(i, Color.Black);
+            }
+
+            for (int i = 0; i < centroids.Length; i++)
+            {
+                indexDarkest = GetMinDistanceIndex();
+                newCentroids[i] = centroids[indexDarkest];
+                centroidDistances[indexDarkest] = double.MaxValue;
+            }
+
+            newCentroids.CopyTo(centroids, 0);
         }
 
         public void UseFreeCentroids()
