@@ -415,10 +415,7 @@ namespace _051colormap
             kms.UseFreeCentroids();
             kms.OrderCentroids();
 
-            centroids = kms.GetCentroids();
-            
-            // TODO: Repeating -> take more valid centroids, do some averaging.
-            // TODO: Fast access for pixels.
+            centroids = kms.GetCentroids();           
         }
     }
 }
