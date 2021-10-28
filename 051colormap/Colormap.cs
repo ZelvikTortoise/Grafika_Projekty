@@ -78,7 +78,7 @@ namespace _051colormap
                 bool failed = false;
                 for (int i = 0; i < free; i++)
                 {
-                    newR = r + dr * mutliplier;        
+                    newR = r + dr * mutliplier;
                     newG = g + dg * mutliplier;
                     newB = b + db * mutliplier;
 
@@ -104,7 +104,7 @@ namespace _051colormap
                         }
                         centroids[invalidIndex] = Color.FromArgb((int)newR, (int)newG, (int)newB);
                         invalidIndex++;
-                    }                                        
+                    }
 
                     mutliplier *= -1;
                     if (mutliplier > 0)
@@ -134,12 +134,53 @@ namespace _051colormap
                         invalidIndex++;
                     }
                     centroids[invalidIndex] = Color.FromArgb((int)r, (int)g, (int)b);
-                    invalidIndex++;                 
+                    invalidIndex++;
                 }
             }
             else
             {
-                // TODO
+                // Searching for two colors with most occurencies.
+                int max = int.MinValue;
+                int max2 = int.MinValue;
+                int indexMax = -1, indexMax2 = -1;
+                for (int i = 0; i < total; i++)
+                {
+                    if (centroidPixelCounts[i] > max)
+                    {
+                        max2 = max;
+                        max = centroidPixelCounts[i];
+                        indexMax2 = indexMax;
+                        indexMax = i;
+                    }
+                    else if (centroidPixelCounts[i] > max2)
+                    {
+                        max2 = centroidPixelCounts[i];
+                        indexMax2 = i;
+                    }
+                }
+
+
+                float r = centroids[indexMax].R;
+                float g = centroids[indexMax].G;
+                float b = centroids[indexMax].B;
+                float dr = (centroids[indexMax2].R - r) / (total - 1.0f);
+                float dg = (centroids[indexMax2].G - g) / (total - 1.0f);
+                float db = (centroids[indexMax2].B - b) / (total - 1.0f);
+
+                int invalidIndex = 0;
+                for (int i = 0; i < free; i++)
+                {
+                    r += dr;
+                    g += dg;
+                    b += db;
+
+                    while (CentroidValid(invalidIndex))
+                    {
+                        invalidIndex++;
+                    }
+                    centroids[invalidIndex] = Color.FromArgb((int)r, (int)g, (int)b);
+                    invalidIndex++;
+                }
             }
         }
 
@@ -209,7 +250,7 @@ namespace _051colormap
             byte index = byte.MaxValue;
             for (byte i = 0; i < centroidDistances.Length; i++)
             {
-                if (centroidDistances[i] < min)
+                if (centroidDistances[i] < min && CentroidValid(i))
                 {
                     min = centroidDistances[i];
                     index = i;
@@ -303,6 +344,8 @@ namespace _051colormap
         /// <param name="centroids">Output palette (array of colors).</param>
         public static void Generate(Bitmap input, int numCol, out Color[] centroids)
         {
+            int maxIterationCount = 50;     // new parameter (time <-> accuracy)
+
             int width = input.Width;
             int height = input.Height;
 
@@ -313,8 +356,16 @@ namespace _051colormap
             bool firstIteration = true;
             byte cIndex;
 
+            int iterationNum = 0;
             while (cont)
             {
+                iterationNum++;
+                if (iterationNum > maxIterationCount)
+                {
+                    // Defense against infinite cycles.
+                    break;
+                }
+
                 cont = false;
                 for (int i = 0; i < width; i++)
                 {
@@ -365,23 +416,9 @@ namespace _051colormap
             kms.OrderCentroids();
 
             centroids = kms.GetCentroids();
-
-            /*
-            // color-ramp linear interpolation:
-            float r = colors[0].R;
-            float g = colors[0].G;
-            float b = colors[0].B;
-            float dr = (colors[numCol - 1].R - r) / (numCol - 1.0f);
-            float dg = (colors[numCol - 1].G - g) / (numCol - 1.0f);
-            float db = (colors[numCol - 1].B - b) / (numCol - 1.0f);
-
-            for (int i = 1; i < numCol; i++)
-            {
-                r += dr;
-                g += dg;
-                b += db;
-                colors[i] = Color.FromArgb((int)r, (int)g, (int)b);
-            }*/
+            
+            // TODO: Repeating -> take more valid centroids, do some averaging.
+            // TODO: Fast access for pixels.
         }
     }
 }
