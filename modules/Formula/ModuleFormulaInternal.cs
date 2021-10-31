@@ -41,7 +41,21 @@ namespace Modules
         //====================================================
         //--- Formula defined directly in this source file ---
 
+        /// <summary>
+        /// Generated colors except white and black.
+        /// RGB for these colors in order are FF0000, FFA500, FFFF00, 00FF00, 00FFFF, 0000FF, 800080 and FFC0CB.
+        /// </summary>
         enum Col { R, O, Y, G, C, B, Pu, Pi };
+
+        private void Rotate(ref double x, ref double y, double degrees)
+        {
+            double newX, newY;
+            newX = Math.Cos(degrees) * x - Math.Sin(degrees) * y;
+            newY = Math.Sin(degrees) * x + Math.Cos(degrees) * y;
+
+            x = newX;
+            y = newY;
+        }
 
         /// <summary>
         /// Defines implicit formulas if available.
@@ -62,19 +76,27 @@ namespace Modules
 
                 float freq = 30.0f;
                 float size = 5.0f;
+                float bgnd = 1.0f;
 
                 // freq=<float>
                 if (Util.TryParse(p, "freq", ref freq))
                     freq = Util.Clamp(freq, 0.01f, 1000.0f);
 
+                // size=<float>
                 if (Util.TryParse(p, "size", ref size))
                     size = Util.Clamp(size, 0.01f, 1000.0f);
+
+                // bgnd=<float>
+                if (Util.TryParse(p, "bgnd", ref bgnd))
+                    bgnd = Util.Clamp(bgnd, 0, 1.0f);
 
                 Dictionary<string, object> sc = new Dictionary<string, object>();
                 sc["freq"] = freq;
                 sc["size"] = size;
+                sc["bgnd"] = bgnd;
                 sc["tooltip"] = "freq=<float> .. density frequency for image generation (default=30)\r" + 
-                                "size=<float> .. size of the cardioid (default=5)";
+                                "size=<float> .. size of the cardioid (default=5)\r" + 
+                                "bgnd=<float> .. 1 - background visible, otherwise not (default=1)";
 
                 return sc;
             };
@@ -86,9 +108,11 @@ namespace Modules
                 out float G,
                 out float B) =>
                 {
+                    // Scaling x, y to be in {0, 1]:
                     double x = ic.x / (double)Math.Max(1, ic.width  - 1);
                     double y = ic.y / (double)Math.Max(1, ic.height - 1);
 
+                    // Getting a uniform scale with the origin at the image center:
                     if (ic.width > ic.height)
                     {
                         // Landscape.
@@ -102,12 +126,17 @@ namespace Modules
                         y -= 0.5;
                     }
 
+                    // Customizing the scales:
                     float freq = 30.0f;
                     Util.TryParse(ic.context, "freq", ref freq);
 
                     x *= freq;
-                    y *= freq;
+                    y *= freq;                   
 
+                    // Rotation:
+                    Rotate(ref x, ref y, Math.PI / 2);
+
+                    // Getting the cardioid's parameter:
                     float a = 5.0f;
                     Util.TryParse(ic.context, "size", ref a);
 
@@ -131,7 +160,7 @@ namespace Modules
                                 }
                                 else
                                 {
-                                    col = Col.O;
+                                    col = Col.C;
                                 }
                             }
                             else
@@ -142,7 +171,7 @@ namespace Modules
                                 }
                                 else
                                 {
-                                    col = Col.G;
+                                    col = Col.Pu;
                                 }
                             }
                         }
@@ -152,7 +181,7 @@ namespace Modules
                             {
                                 if (!mod8yields4567)
                                 {
-                                    col = Col.C;
+                                    col = Col.O;
                                 }
                                 else
                                 {
@@ -163,7 +192,7 @@ namespace Modules
                             {
                                 if (!mod8yields4567)
                                 {
-                                    col = Col.Pu;
+                                    col = Col.G;
                                 }
                                 else
                                 {
@@ -215,65 +244,34 @@ namespace Modules
                                 B = 0.796f;
                                 break;
                             default:
+                                // Black color because we found some kind of a black hole in binary.
                                 R = 0;
                                 G = 0;
                                 B = 0;
                                 break;
-                        }
-                        //   R      O       Y      G      C      B     Pu     Pi
-                        // FF0000 FFA500 FFFF00 00FF00 00FFFF 0000FF 800080 FFC0CB
-
+                        }                        
                     }
                     else
                     {
-                        R = 1.0f;
-                        G = 1.0f;
-                        B = 1.0f;
+                        // Adjusting visibility of the background:
+                        float bgnd = 1.0f;
+                        Util.TryParse(ic.context, "bgnd", ref bgnd);
+                        if (Math.Abs(bgnd - 1) < 1E-9)
+                        {
+                            // Background visible.
+                            R = 1.0f;
+                            G = 0.753f;
+                            B = 0.796f;
+                        }
+                        else
+                        {
+                            // Using white color - background "invisible".
+                            R = 1.0f;
+                            G = 1.0f;
+                            B = 1.0f;
+                        }
                     }                    
                 };
-            /*
-            // Test create function: sinc(r^2)
-            f.pixelCreate = (
-              in ImageContext ic,
-              out float R,
-              out float G,
-              out float B) =>
-            {
-              // [x, y] in {0, 1]
-              double x = ic.x / (double)Math.Max(1, ic.width  - 1);
-              double y = ic.y / (double)Math.Max(1, ic.height - 1);
-
-              // I need uniform scale (x-scale == y-scale) with origin at the image center.
-              if (ic.width > ic.height)
-              {
-                // Landscape.
-                x -= 0.5;
-                y = ic.height * (y - 0.5) / ic.width;
-              }
-              else
-              {
-                // Portrait.
-                x = ic.width * (x - 0.5) / ic.height;
-                y -= 0.5;
-              }
-
-              // Custom scales.
-              float freq = 12.0f;
-              Util.TryParse(ic.context, "freq", ref freq);
-
-              x *= freq;
-              y *= freq;
-
-              // Periodic function of r^2.
-              double rr = x * x + y * y;
-              bool odd = ((int)Math.Round(rr) & 1) > 0;
-
-              // Simple color palette (yellow, blue).
-              R = odd ? 0.0f : 1.0f;
-              G = R;
-              B = 1.0f - R;
-            };*/
-
 
             return f;
         }
