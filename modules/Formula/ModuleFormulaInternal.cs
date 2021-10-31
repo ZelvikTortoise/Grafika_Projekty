@@ -20,9 +20,10 @@ namespace Modules
     }
 
     /// <summary>
-    /// Author's full name (SurnameFirstname).
+    /// 
+    /// 's full name (SurnameFirstname).
     /// </summary>
-    public override string Author => "PelikanJosef";
+    public override string Author => "LukasMacek";
 
     /// <summary>
     /// Name of the module (short enough to fit inside a list-boxes, etc.).
@@ -57,12 +58,6 @@ namespace Modules
 
         Dictionary<string, string> p = Util.ParseKeyValueList(param);
 
-        float coeff = 1.0f;
-
-        // coeff=<float>
-        if (Util.TryParse(p, "coeff", ref coeff))
-          coeff = Util.Saturate(coeff);
-
         float freq = 12.0f;
 
         // freq=<float>
@@ -70,33 +65,14 @@ namespace Modules
           freq = Util.Clamp(freq, 0.01f, 1000.0f);
 
         Dictionary<string, object> sc = new Dictionary<string, object>();
-        sc["coeff"] = coeff;
         sc["freq"] = freq;
-        sc["tooltip"] = "coeff=<float> .. swap coefficient (0.0 - no swap, 1.0 - complete swap)\r" +
-                        "freq=<float> .. density frequency for image generation (default=12)";
+        sc["tooltip"] = "freq=<float> .. density frequency for image generation (default=12)";
 
-        return sc;
+          return sc;
       };
 
-      // R <-> B channel swap with weights.
-      f.pixelTransform0 = (
-        in ImageContext ic,
-        ref float R,
-        ref float G,
-        ref float B) =>
-      {
-        float coeff = 0.0f;
-        Util.TryParse(ic.context, "coeff", ref coeff);
-
-        float r = Util.Saturate(R * (1.0f - coeff) + B * coeff);
-        float b = Util.Saturate(R * coeff          + B * (1.0f - coeff));
-        R = r;
-        B = b;
-
-        // Output color was modified.
-        return true;
-      };
-
+      
+      /*
       // Test create function: sinc(r^2)
       f.pixelCreate = (
         in ImageContext ic,
@@ -137,7 +113,7 @@ namespace Modules
         R = odd ? 0.0f : 1.0f;
         G = R;
         B = 1.0f - R;
-      };
+      };*/
 
       return f;
     }
