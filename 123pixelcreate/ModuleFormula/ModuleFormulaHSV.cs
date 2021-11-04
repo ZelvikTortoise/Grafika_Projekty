@@ -10,21 +10,20 @@ namespace Modules
     /// ModuleFormulaInternal class - template for internal image filter
     /// defined pixel-by-pixel using lambda functions.
     /// </summary>
-    public class ModuleFormulaHSV : ModuleFormula
+    public class ModuleHSVInternal : ModuleFormula
     {
         /// <summary>
         /// Mandatory plain constructor.
         /// </summary>
-        public ModuleFormulaHSV()
+        public ModuleHSVInternal()
         {
             param = "fast";
         }
 
         /// <summary>
-        /// 
-        /// 's full name (SurnameFirstname).
+        /// Author's full name (SurnameFirstname).
         /// </summary>
-        public override string Author => "LukasMacek";
+        public override string Author => "MacekLukas";
 
         /// <summary>
         /// Name of the module (short enough to fit inside a list-boxes, etc.).
@@ -59,36 +58,35 @@ namespace Modules
 
                 Dictionary<string, string> p = Util.ParseKeyValueList(param);
 
-                float dH = 0.0f;
+                float dH = 180.0f;
 
-                // coeff=<float>
-                if (Util.TryParse(p, "coeff", ref dH))
-                    dH = Util.Saturate(dH);
-
+                // dH=<float>
+                if (Util.TryParse(p, "dH", ref dH))
+                    dH = Util.Clamp(dH, 0, 360);
 
                 Dictionary<string, object> sc = new Dictionary<string, object>();
                 sc["dH"] = dH;
-                sc["tooltip"] = "dH=<float> .. changes the color of each pixel by rotating H for dH degrees in HSV representation\r"; //+
-                                                                                                            //"freq=<float> .. density frequency for image generation (default=12)";
+                sc["tooltip"] = "dH=<float> .. changes the color of each pixel by rotating H for dH degrees in HSV representation (default=180)"; //\r +
+                                                                                                                                                  //"freq=<float> .. density frequency for image generation (default=12)";
 
                 return sc;
             };
 
-
+            // R <-> B channel swap with weights.
             f.pixelTransform0 = (
-                in ImageContext ic,
-                ref float R,
-                ref float G,
-                ref float B) =>
+              in ImageContext ic,
+              ref float R,
+              ref float G,
+              ref float B) =>
             {
-                float dH = 0.0f;
+                float dH = 180.0f;
                 Util.TryParse(ic.context, "dH", ref dH);
 
                 double H, S, V;
                 double r, g, b;
 
-                // Conversion to HSV.
-                Arith.ColorToHSV(Color.FromArgb((int)R, (int)G, (int)B), out H, out S, out V);
+
+                Arith.ColorToHSV(Color.FromArgb((int)(R * 255), (int)(G * 255), (int)(B * 255)), out H, out S, out V);
                 // 0 <= H <= 360, 0 <= S <= 1, 0 <= V <= 1
 
                 // HSV transform.
@@ -97,17 +95,18 @@ namespace Modules
                     H = H + dH;
                     S = Util.Saturate(S);
                     V = Util.Saturate(V);
-                }                
+                }
                 // TODO: Gradual changes according to the accuracy!
 
                 // Conversion back to RGB.
                 Arith.HSVtoRGB(H, S, V, out r, out g, out b);
-                R = (float)r;
-                G = (float)g;
-                B = (float)b;
+                R = Util.Saturate((float)r);
+                G = Util.Saturate((float)g);
+                B = Util.Saturate((float)b);
 
+                // Output color was modified.
                 return true;
-            };
+            };         
 
             return f;
         }
