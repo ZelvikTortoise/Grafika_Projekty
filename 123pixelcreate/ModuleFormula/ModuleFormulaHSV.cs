@@ -50,6 +50,31 @@ namespace Modules
         {
             Formula f = new Formula();
 
+            // Text params -> script context.
+            // Any global pre-processing is allowed here.
+            f.contextCreate = (in Bitmap input, in string param) =>
+            {
+                if (string.IsNullOrEmpty(param))
+                    return null;
+
+                Dictionary<string, string> p = Util.ParseKeyValueList(param);
+
+                float coeff = 1.0f;
+
+                // coeff=<float>
+                if (Util.TryParse(p, "coeff", ref coeff))
+                    coeff = Util.Saturate(coeff);
+
+
+                Dictionary<string, object> sc = new Dictionary<string, object>();
+                sc["coeff"] = coeff;
+                sc["tooltip"] = "coeff=<float> .. swap coefficient (0.0 - no swap, 1.0 - complete swap)\r"; //+
+                                                                                                            //"freq=<float> .. density frequency for image generation (default=12)";
+
+                return sc;
+            };
+
+
             f.pixelTransform0 = (
                 in ImageContext ic,
                 ref float R,
@@ -63,9 +88,9 @@ namespace Modules
                 float dH = 0.0f;
                 double H, S, V;
                 double r, g, b;
-                
+
                 // Conversion to HSV.
-                Arith.ColorToHSV(ic, out H, out S, out V);
+                Arith.ColorToHSV(Color.FromArgb((int)R, (int)G, (int)B), out H, out S, out V);
                 // 0 <= H <= 360, 0 <= S <= 1, 0 <= V <= 1
 
                 // HSV transform.
@@ -83,58 +108,6 @@ namespace Modules
             };
 
             return f;
-
-
-
-          /*  // Text params -> script context.
-            // Any global pre-processing is allowed here.
-            f.contextCreate = (in Bitmap input, in string param) =>
-            {
-                if (string.IsNullOrEmpty(param))
-                    return null;
-
-                Dictionary<string, string> p = Util.ParseKeyValueList(param);
-
-                float freq = 30.0f;
-                float size = 5.0f;
-                float bgnd = 1.0f;
-
-
-                // TODO: CHANGE!
-                // freq=<float>
-                if (Util.TryParse(p, "freq", ref freq))
-                    freq = Util.Clamp(freq, 0.01f, 1000.0f);
-
-                // size=<float>
-                if (Util.TryParse(p, "size", ref size))
-                    size = Util.Clamp(size, 0.01f, 1000.0f);
-
-                // bgnd=<float>
-                if (Util.TryParse(p, "bgnd", ref bgnd))
-                    bgnd = Util.Clamp(bgnd, 0, 1.0f);
-
-                Dictionary<string, object> sc = new Dictionary<string, object>();
-                sc["freq"] = freq;
-                sc["size"] = size;
-                sc["bgnd"] = bgnd;
-                sc["tooltip"] = "freq=<float> .. density frequency for image generation (default=30)\r" +
-                                "size=<float> .. size of the cardioid (default=5)\r" +
-                                "bgnd=<float> .. 1 - background visible, otherwise not (default=1)";
-
-                return sc;
-            };
-
-
-            f.pixelCreate = (
-                in ImageContext ic,
-                out float R,
-                out float G,
-                out float B) =>
-            {
-                R = 0;
-                G = 0;
-                B = 0;
-            };                  */
         }
     }
 }
