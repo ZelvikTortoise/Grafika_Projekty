@@ -17,7 +17,7 @@ namespace Modules
         /// </summary>
         public ModuleFormulaHSV()
         {
-            param = "fast, create";
+            param = "fast";
         }
 
         /// <summary>
@@ -59,16 +59,16 @@ namespace Modules
 
                 Dictionary<string, string> p = Util.ParseKeyValueList(param);
 
-                float coeff = 1.0f;
+                float dH = 0.0f;
 
                 // coeff=<float>
-                if (Util.TryParse(p, "coeff", ref coeff))
-                    coeff = Util.Saturate(coeff);
+                if (Util.TryParse(p, "coeff", ref dH))
+                    dH = Util.Saturate(dH);
 
 
                 Dictionary<string, object> sc = new Dictionary<string, object>();
-                sc["coeff"] = coeff;
-                sc["tooltip"] = "coeff=<float> .. swap coefficient (0.0 - no swap, 1.0 - complete swap)\r"; //+
+                sc["dH"] = dH;
+                sc["tooltip"] = "dH=<float> .. changes the color of each pixel by rotating H for dH degrees in HSV representation\r"; //+
                                                                                                             //"freq=<float> .. density frequency for image generation (default=12)";
 
                 return sc;
@@ -81,11 +81,9 @@ namespace Modules
                 ref float G,
                 ref float B) =>
             {
-                float coeff = 0.0f;
-                Util.TryParse(ic.context, "coeff", ref coeff);
-
-
                 float dH = 0.0f;
+                Util.TryParse(ic.context, "dH", ref dH);
+
                 double H, S, V;
                 double r, g, b;
 
@@ -94,9 +92,13 @@ namespace Modules
                 // 0 <= H <= 360, 0 <= S <= 1, 0 <= V <= 1
 
                 // HSV transform.
-                H = H + dH;
-                S = Util.Saturate(S);
-                V = Util.Saturate(V);
+                if (true)           // TODO CONDITIONS!
+                {
+                    H = H + dH;
+                    S = Util.Saturate(S);
+                    V = Util.Saturate(V);
+                }                
+                // TODO: Gradual changes according to the accuracy!
 
                 // Conversion back to RGB.
                 Arith.HSVtoRGB(H, S, V, out r, out g, out b);
