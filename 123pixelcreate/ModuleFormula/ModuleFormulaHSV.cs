@@ -85,7 +85,6 @@ namespace Modules
                 double H, S, V;
                 double r, g, b;
 
-
                 Arith.ColorToHSV(Color.FromArgb((int)(R * 255), (int)(G * 255), (int)(B * 255)), out H, out S, out V);
                 // 0 <= H <= 360, 0 <= S <= 1, 0 <= V <= 1
 
