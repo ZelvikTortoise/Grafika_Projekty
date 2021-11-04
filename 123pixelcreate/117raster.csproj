@@ -121,6 +121,7 @@
     <Compile Include="FormMain.Designer.cs">
       <DependentUpon>FormMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="ModuleFormula\ModuleFormulaHSV.cs" />
     <Compile Include="ModuleHistogram\Histogram.cs" />
     <Compile Include="ModuleHistogram\HistogramForm.cs">
       <SubType>Form</SubType>
