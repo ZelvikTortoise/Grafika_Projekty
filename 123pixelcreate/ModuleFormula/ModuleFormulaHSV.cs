@@ -38,6 +38,69 @@ namespace Modules
           "create .. new image\r" +
           "wid=<width>, hei=<height>";
 
+        private double GetModifier(double H, double S, double V)
+        {
+            if (H >= 350 && S < 0.50 && V > 0.5)
+            {
+                return 0;
+            }
+            
+            if (H >= 317 && S < 0.50 && V > 0.5)
+            {
+                return 1 - (H - 317) / 33;
+            }
+
+            if (H >= 345 && S < 0.50)
+            {
+                return 1 - (V / 0.50);
+            }
+
+            if (S < 0.50 && H >= 317)
+            {
+                return Math.Max((1 - (H - 317) / 33), (1 - (V / 0.50)));
+            }
+
+            // S < 0.50
+            if (S >= 0.30 && H >= 317)
+            {
+                return 1 - ((S - 0.30) / 0.20);
+            }
+
+            if (H > 50)
+            {
+                return 1;
+            }
+
+            // H <= 50
+            if ((S < 0.27 || S > 0.68) && V >= 0.5)
+            {
+                return 0;
+            }
+
+            if (S < 0.27)
+            {
+                return 1 - (V / 0.50);
+            }
+
+            // WTF?
+            if (H > 50 && H < 100)
+            {
+                return (H - 50) / 50;
+            }
+
+            if (H <= 18 && V >= 0.40)
+            {
+                return 0;
+            }
+
+            if (V > 0.30 && V <= 0.63)
+            {
+                return 1 - ((V - 0.30) / 0.33);
+            }
+
+            return 1;
+        }
+
         //====================================================
         //--- Formula defined directly in this source file ---
 
@@ -89,12 +152,9 @@ namespace Modules
                 // 0 <= H <= 360, 0 <= S <= 1, 0 <= V <= 1
 
                 // HSV transform.
-                if (true)           // TODO CONDITIONS!
-                {
-                    H = H + dH;
-                    S = Util.Saturate(S);
-                    V = Util.Saturate(V);
-                }
+                H = H + GetModifier(H, S, V) * dH;
+                S = Util.Saturate(S);
+                V = Util.Saturate(V);
                 // TODO: Gradual changes according to the accuracy!
 
                 // Conversion back to RGB.
