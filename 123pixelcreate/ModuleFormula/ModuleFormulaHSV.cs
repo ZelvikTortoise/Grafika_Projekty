@@ -45,7 +45,17 @@ namespace Modules
                 return 0;
             }
 
-            if (H >= 330 && S >= 0.30)
+            if (H >= 315 && S >= 0.20)
+            {
+                return 0;
+            }
+
+            if (H <= 30 && S >= 0.40 && V < 0.75)
+            {
+                return 0;
+            }
+
+            if (H >= 250 && S < 0.10)
             {
                 return 0;
             }
@@ -113,12 +123,13 @@ namespace Modules
             {
                 return 1 - (V / 0.25);
             }
-            /*
+
             if (V > 0.30 && V <= 0.80)
             {
                 return 1 - ((V - 0.30) / 0.50);
             }
 
+            /*
             if (S > 0.17 && V >= 0.9)
             {
                 return 1 - ((S - 0.17) / 0.10);
@@ -126,6 +137,11 @@ namespace Modules
 
             return 0;
         }
+        // Note: I know this code is a mess... I kind of had to do it and then delete everything and start again... I could do it better
+        //       but don't have the time and the nerves for it anymore...
+        //       The hardest part for me was to choose how much do I want to support skin in dark images and how much I can afford to not
+        //       recolor in bright images... When I started doing compromises, it was like everything started going wrong...
+        //                                                                                                                          Lukas
 
         //====================================================
         //--- Formula defined directly in this source file ---
