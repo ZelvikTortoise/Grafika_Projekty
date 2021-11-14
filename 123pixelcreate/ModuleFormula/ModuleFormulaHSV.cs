@@ -87,12 +87,12 @@ namespace Modules
                 return 1 - (V / 0.50);
             }
 
-            if (H <= 23 && V >= 0.40)
+            if (H <= 23 && V >= 0.20)
             {
                 return 0;
             }
 
-            if (H <= 5 && V >= 0.25)
+            if (H <= 5 && V >= 0.15)
             {
                 return 0;
             }
@@ -108,7 +108,7 @@ namespace Modules
             {
                 return 1 - (V / 0.25);
             }
-
+            /*
             if (V > 0.30 && V <= 0.80)
             {
                 return 1 - ((V - 0.30) / 0.50);
@@ -117,9 +117,9 @@ namespace Modules
             if (S > 0.17 && V >= 0.9)
             {
                 return 1 - ((S - 0.17) / 0.10);
-            }
+            }*/
 
-            return 1;
+            return 0;
         }
 
         //====================================================
