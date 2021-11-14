@@ -44,7 +44,12 @@ namespace Modules
             {
                 return 0;
             }
-            
+
+            if (H >= 330 && S >= 0.30)
+            {
+                return 0;
+            }
+
             if (H >= 317 && S < 0.50 && V > 0.5)
             {
                 return 1 - (H - 317) / 33;
