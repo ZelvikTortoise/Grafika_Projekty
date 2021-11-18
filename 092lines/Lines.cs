@@ -21,7 +21,7 @@ namespace _092lines
       // {{
 
       // Put your name here.
-      name = "Josef Pelikán";
+      name = "Lukáš Macek";
 
       // Image size in pixels.
       wid = 800;
@@ -85,6 +85,7 @@ namespace _092lines
         Util.TryParse(p, "seed", ref seed);
       }
 
+      /*
       int wq = c.Width / 4;
       int hq = c.Height / 4;
       int wh = wq + wq;
@@ -227,9 +228,7 @@ namespace _092lines
           if (r.NextDouble() > prob)
             break;
         }
-      }
-
-      // }}
+        */      
     }
   }
 }
