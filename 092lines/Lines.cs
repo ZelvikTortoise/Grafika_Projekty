@@ -6,19 +6,29 @@ using Utilities;
 
 namespace _092lines
 {    
+    public struct Cube
+    {
+        Edge[] Edges { get; }
+
+        public Cube(Edge[] edges)
+        {
+            this.Edges = edges != null ? edges : new Edge[12];
+        }
+    }
+
     public struct Edge
     {
         public Point Start { get; }
         public Point End { get; }
         public bool Vertical { get; }
-        public bool Wavy { get; }
+        public bool Dashed { get; }
 
-        public Edge(Point start, Point end, bool wavy)
+        public Edge(Point start, Point end, bool dashed)
         {
             this.Start = start;
             this.End = end;
             this.Vertical = start.X == end.X ? true : false;
-            this.Wavy = wavy;
+            this.Dashed = dashed;
         }
     }
 
@@ -52,7 +62,18 @@ namespace _092lines
             // }}
         }
 
-        private static void DrawCube(Canvas c, int startX, int startY, float lLength, int seed)
+        private static void DrawDashedLine(Canvas c, Point start, Point end)
+        {
+            // TODO
+        }
+
+        private static void GenerateCubeSlice(Canvas c, Cube cube, int seed)
+        {
+            Random random = seed <= 0 ? new Random() : new Random(seed);
+            // TODO
+        }
+
+        private static Cube DrawCube(Canvas c, int startX, int startY, float lLength)
         {
             int len = (int)lLength;
             int lenh = (int)(0.5 * len);
@@ -60,7 +81,7 @@ namespace _092lines
 
             if (len == 0 || lenh == 0)
             {
-                return;
+                return new Cube();
             }
 
             Point A = new Point(startX, startY);
@@ -74,16 +95,17 @@ namespace _092lines
 
             Edge AB = new Edge(A, B, false);
             Edge BC = new Edge(B, C, false);
-            Edge CD = new Edge(C, D, true); // wavy
-            Edge DA = new Edge(D, A, true); // wavy
+            Edge CD = new Edge(C, D, true); // dahsed
+            Edge DA = new Edge(D, A, true); // dahsed
             Edge AE = new Edge(A, E, false);
-            Edge BF = new Edge(B, F, false); 
-            Edge CG = new Edge(C, G, false); 
-            Edge DH = new Edge(D, H, true); // wavy
+            Edge BF = new Edge(B, F, false);
+            Edge CG = new Edge(C, G, false);
+            Edge DH = new Edge(D, H, true); // dahsed
             Edge EF = new Edge(E, F, false);
             Edge FG = new Edge(F, G, false);
             Edge GH = new Edge(G, H, false);
             Edge HE = new Edge(H, E, false);
+
             Edge[] edges = { AB, BC, CD, DA,
                              AE, BF, CG, DH,
                              EF, FG, GH, HE
@@ -96,7 +118,7 @@ namespace _092lines
 
                 c.Line(e.Start.X, e.Start.Y, e.End.X, e.End.Y); // Remove.
 
-                if (e.Wavy)
+                if (e.Dashed)
                 {
                     // TODO
                 }
@@ -104,7 +126,9 @@ namespace _092lines
                 {
                     // c.Line(e.Start.X, e.Start.Y, e.End.X, e.End.Y);
                 }
-            }            
+            }
+
+            return new Cube(edges);
         }
 
         /// <summary>
@@ -144,7 +168,8 @@ namespace _092lines
             float lineLength = 66;
             int startX = 100, startY = 100;
 
-            DrawCube(c, startX, startY, lineLength, seed);
+            Cube cube = DrawCube(c, startX, startY, lineLength);
+            GenerateCubeSlice(c, cube, seed);
 
             
             /*
