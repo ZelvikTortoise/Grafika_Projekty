@@ -47,7 +47,7 @@ namespace _092lines
 
       // Input params.
       float penWidth = 1.0f;   // pen width
-      bool antialias = false;  // use anti-aliasing?
+      bool antialias = true;  // use anti-aliasing?
       int objects    = 100;    // number of randomly generated objects (squares, stars, Brownian particles)
       int hatches    = 12;     // number of hatch-lines for the squares
       double prob    = 0.95;   // continue-probability for the Brownian motion simulator
