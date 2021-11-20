@@ -10,6 +10,102 @@ namespace _092lines
     {
         public Edge[] Edges { get; }
 
+        public static bool FacesOpposite(Faces f1, Faces f2)
+        {
+            // Argument range:
+            if ((int)f1 < 0 || (int)f1 > 5 || (int)f2 < 0 || (int)f2 > 5)
+            {
+                throw new ArgumentException($"{nameof(FacesOpposite)} function: Unknown value of the enum {nameof(Faces)}.\nRecieved values: {f1}, {f2}.");
+            }
+
+            // Degenerated case:
+            if (f1 == f2)
+            {
+                return false;
+            }
+                
+            // Swapping:
+            if ((int)f1 > (int)f2)
+            {
+                Faces temp =f1;
+                f1 = f2;
+                f2 = temp;
+            }
+
+            // Now (int)f1 < (int)f2:
+            switch (f1)
+            {
+                case Faces.Down:
+                    if (f2 == Faces.Up)
+                        return true;
+                    break;
+                case Faces.Front:
+                    if (f2 == Faces.Back)
+                        return true;
+                    break;
+                case Faces.Right:
+                    if (f2 == Faces.Left)
+                        return true;
+                    break;               
+            }
+
+            return false;
+        }
+
+        public static Faces[] GetEdgeFaces(int edgeIndex)
+        {
+            switch (edgeIndex)
+            {
+                case 0:
+                    return new Faces[] { Faces.Down, Faces.Front };
+                case 1:
+                    return new Faces[] { Faces.Down, Faces.Right };
+                case 2:
+                    return new Faces[] { Faces.Down, Faces.Back };
+                case 3:
+                    return new Faces[] { Faces.Down, Faces.Left };
+                case 4:
+                    return new Faces[] { Faces.Front, Faces.Left };
+                case 5:
+                    return new Faces[] { Faces.Front, Faces.Right };
+                case 6:
+                    return new Faces[] { Faces.Right, Faces.Back };
+                case 7:
+                    return new Faces[] { Faces.Back, Faces.Left };
+                case 8:
+                    return new Faces[] { Faces.Front, Faces.Up };
+                case 9:
+                    return new Faces[] { Faces.Right, Faces.Up };
+                case 10:
+                    return new Faces[] { Faces.Back, Faces.Up };
+                case 11:
+                    return new Faces[] { Faces.Left, Faces.Up };
+                default:
+                    throw new ArgumentException($"{nameof(GetEdgeFaces)} function: Indeces of edges are numbered from 0 to 11.\n Received index: {edgeIndex}.");
+            }
+        }
+
+        public static int[] GetEdgeNums(Faces face)
+        {
+            switch (face)
+            {
+                case Faces.Down:
+                    return new int[4] { 0, 1, 2, 3 };
+                case Faces.Front:
+                    return new int[4] { 0, 4, 5, 8 };
+                case Faces.Right:
+                    return new int[4] { 1, 5, 6, 9 };
+                case Faces.Back:
+                    return new int[4] { 2, 6, 7, 10 };
+                case Faces.Left:
+                    return new int[4] { 3, 4, 7, 11 };
+                case Faces.Up:
+                    return new int[4] { 8, 9, 10, 11 };
+                default:
+                    throw new ArgumentException($"{nameof(GetEdgeNums)} function: Unknown value of the enum {nameof(Faces)}.\nRecieved value: {face}.");
+            }
+        }
+
         public static bool EdgesOpposite(int e1Index, int e2Index)
         {
             // Argument range:
@@ -64,12 +160,12 @@ namespace _092lines
             return false;
         }
 
-        public static bool EdgesShareSide(int e1Index, int e2Index)
+        public static bool EdgesShareFace(int e1Index, int e2Index)
         {
             // Argument range:
             if (e1Index < 0 || e1Index > 11 || e2Index < 0 || e2Index > 11)
             {
-                throw new ArgumentException($"{nameof(EdgesShareSide)} function: Indeces of edges are numbered from 0 to 11.\n Received indeces: {e1Index}, {e2Index}.");
+                throw new ArgumentException($"{nameof(EdgesShareFace)} function: Indeces of edges are numbered from 0 to 11.\n Received indeces: {e1Index}, {e2Index}.");
             }            
 
             // Degenerated case:
@@ -143,6 +239,8 @@ namespace _092lines
             this.Edges = edges != null ? edges : new Edge[12];
         }
     }
+
+    public enum Faces { Down, Front, Right, Back, Left, Up }    // Not Bottom / Top, so every face has a unique starting letter.
 
     public struct Edge
     {
@@ -230,16 +328,14 @@ namespace _092lines
         {
             List<int> possibleEdgeNums = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
             int[] edgeNums = new int[3];
-            // Edge[] edges = new Edge[3];
 
             int edgeNumIndex, edgeNum;
-            for (int i = 1; i <= 2; i++)
+            for (int i = 0; i <= 1; i++)
             {
-                edgeNumIndex = random.Next(0, possibleEdgeNums.Count);                
-                possibleEdgeNums.RemoveAt(edgeNumIndex);
+                edgeNumIndex = random.Next(0, possibleEdgeNums.Count);                                
                 edgeNum = possibleEdgeNums[edgeNumIndex];
-                edgeNums[i] = edgeNum;
-                // edges[i] = cube.Edges[edgeNum];
+                possibleEdgeNums.RemoveAt(edgeNumIndex);
+                edgeNums[i] = edgeNum;                
             }
 
             // 3rd edge:
@@ -247,17 +343,50 @@ namespace _092lines
             if (Cube.EdgesOpposite(edgeNums[0], edgeNums[1]))
             {
                 possibleEdgeNums = new List<int>();
+                for (int i = 0; i <= 11; i++)
+                {
+                    if (i == edgeNums[0] || i == edgeNums[1])
+                        continue;
 
+                    if (Cube.EdgesShareFace(edgeNums[0], i) && Cube.EdgesShareFace(edgeNums[1], i))
+                        possibleEdgeNums.Add(i);
+                }
+
+                edgeNums[2] = possibleEdgeNums[random.Next(0, possibleEdgeNums.Count)];
             }
-            else if (Cube.EdgesShareSide(edgeNums[0], edgeNums[1]))
+            else if (Cube.EdgesShareFace(edgeNums[0], edgeNums[1]))
             {
+                bool[] sharesExcatlyOne = new bool[12];
+                for (int i = 0; i <= 11; i++)
+                    sharesExcatlyOne[i] = false;
 
+                for (int i = 0; i<= 11; i++)
+                {
+                    for (int j = 0; j <= 1; j++)
+                    {
+                        if (Cube.EdgesShareFace(edgeNums[j], i))
+                        {
+                            if (sharesExcatlyOne[i])
+                                sharesExcatlyOne[i] = false;
+                            else
+                                sharesExcatlyOne[i] = true;
+                        }    
+                    }
+                }
+
+                possibleEdgeNums = new List<int>();
+                for (int i = 0; i <= 11; i++)
+                {
+                    if (sharesExcatlyOne[i])
+                        possibleEdgeNums.Add(i);
+                }
+
+                edgeNums[2] = possibleEdgeNums[random.Next(0, possibleEdgeNums.Count)];
             }
             else
             {
 
             }
-             
 
             // int x = cube.Edges[1].Start.X;
 
