@@ -12,14 +12,130 @@ namespace _092lines
 
         public static bool EdgesOpposite(int e1Index, int e2Index)
         {
-            // TODO
-            return true;
+            // Argument range:
+            if (e1Index < 0 || e1Index > 11 || e2Index < 0 || e2Index > 11)
+            {
+                throw new ArgumentException($"{nameof(EdgesOpposite)} function: Indeces of edges are numbered from 0 to 11.\n Received indeces: {e1Index}, {e2Index}.");
+            }
+
+            // Degenerated case:
+            if (e1Index == e2Index)
+            {
+                return false;
+            }
+
+            // Swapping:
+            if (e1Index > e2Index)
+            {
+                int temp = e1Index;
+                e1Index = e2Index;
+                e2Index = temp;
+            }
+
+            // Now e1Index < e2Index:
+            switch (e1Index)
+            {
+                case 0:
+                    if (e2Index == 10)
+                        return true;
+                    break;
+                case 1:
+                    if (e2Index == 11)
+                        return true;
+                    break;
+                case 2:
+                    if (e2Index == 8)
+                        return true;
+                    break;
+                case 3:
+                    if (e2Index == 9)
+                        return true;
+                    break;
+                case 4:
+                    if (e2Index == 6)
+                        return true;
+                    break;
+                case 5:
+                    if (e2Index == 7)
+                        return true;
+                    break;
+            }
+
+            return false;
         }
 
         public static bool EdgesShareSide(int e1Index, int e2Index)
         {
-            // TODO
-            return true;
+            // Argument range:
+            if (e1Index < 0 || e1Index > 11 || e2Index < 0 || e2Index > 11)
+            {
+                throw new ArgumentException($"{nameof(EdgesShareSide)} function: Indeces of edges are numbered from 0 to 11.\n Received indeces: {e1Index}, {e2Index}.");
+            }            
+
+            // Degenerated case:
+            if (e1Index == e2Index)
+            {
+                return true;
+            }
+
+            // Swapping:
+            if (e1Index > e2Index)
+            {
+                int temp = e1Index;
+                e1Index = e2Index;
+                e2Index = temp;
+            }
+
+            // Now e1Index < e2Index:
+            switch (e1Index)
+            {
+                case 0:
+                    if (e2Index == 1 || e2Index == 2 || e2Index == 3 || e2Index == 4 || e2Index == 5 || e2Index == 8)
+                        return true;
+                    break;
+                case 1:
+                    if (e2Index == 2 || e2Index == 3 || e2Index == 5 || e2Index == 6 || e2Index == 9)
+                        return true;
+                    break;
+                case 2:
+                    if (e2Index == 3 || e2Index == 6 || e2Index == 7 || e2Index == 10)
+                        return true;
+                    break;
+                case 3:
+                    if (e2Index == 4 || e2Index == 7 || e2Index == 11)
+                        return true;
+                    break;
+                case 4:
+                    if (e2Index == 5 || e2Index == 7 || e2Index == 8 || e2Index == 11)
+                        return true;
+                    break;
+                case 5:
+                    if (e2Index == 6 || e2Index == 8 || e2Index == 9)
+                        return true;
+                    break;
+                case 6:
+                    if (e2Index == 7 || e2Index == 9 || e2Index == 10)
+                        return true;
+                    break;
+                case 7:
+                    if (e2Index == 10 || e2Index == 11)
+                        return true;
+                    break;
+                case 8:
+                    if (e2Index == 9 || e2Index == 10 || e2Index == 11)
+                        return true;
+                    break;
+                case 9:
+                    if (e2Index == 10 || e2Index == 11)
+                        return true;
+                    break;
+                case 10:
+                    if (e2Index == 11)
+                        return true;
+                    break;
+            }
+
+            return false;
         }
 
         public Cube(Edge[] edges)
@@ -128,19 +244,20 @@ namespace _092lines
 
             // 3rd edge:
 
-            /*if (Cube.EdgesOpposite(edgeNums[0], edgeNums[1]))
-             {
+            if (Cube.EdgesOpposite(edgeNums[0], edgeNums[1]))
+            {
+                possibleEdgeNums = new List<int>();
 
-             }
-             else if (Cube.EdgesShareSide(edgeNums[0], edgeNums[1]))
-             {
+            }
+            else if (Cube.EdgesShareSide(edgeNums[0], edgeNums[1]))
+            {
+
+            }
+            else
+            {
+
+            }
              
-             }
-             else
-             {
-              
-             }
-             */
 
             // int x = cube.Edges[1].Start.X;
 
