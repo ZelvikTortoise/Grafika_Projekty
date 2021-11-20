@@ -8,7 +8,19 @@ namespace _092lines
 {    
     public struct Cube
     {
-        Edge[] Edges { get; }
+        public Edge[] Edges { get; }
+
+        public static bool EdgesOpposite(int e1Index, int e2Index)
+        {
+            // TODO
+            return true;
+        }
+
+        public static bool EdgesShareSide(int e1Index, int e2Index)
+        {
+            // TODO
+            return true;
+        }
 
         public Cube(Edge[] edges)
         {
@@ -100,6 +112,38 @@ namespace _092lines
 
         private static void GenerateCubeSlice(Canvas c, Cube cube, Random random)
         {
+            List<int> possibleEdgeNums = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+            int[] edgeNums = new int[3];
+            // Edge[] edges = new Edge[3];
+
+            int edgeNumIndex, edgeNum;
+            for (int i = 1; i <= 2; i++)
+            {
+                edgeNumIndex = random.Next(0, possibleEdgeNums.Count);                
+                possibleEdgeNums.RemoveAt(edgeNumIndex);
+                edgeNum = possibleEdgeNums[edgeNumIndex];
+                edgeNums[i] = edgeNum;
+                // edges[i] = cube.Edges[edgeNum];
+            }
+
+            // 3rd edge:
+
+            /*if (Cube.EdgesOpposite(edgeNums[0], edgeNums[1]))
+             {
+
+             }
+             else if (Cube.EdgesShareSide(edgeNums[0], edgeNums[1]))
+             {
+             
+             }
+             else
+             {
+              
+             }
+             */
+
+            // int x = cube.Edges[1].Start.X;
+
             // TODO
         }
 
