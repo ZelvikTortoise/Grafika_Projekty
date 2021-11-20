@@ -360,10 +360,10 @@ namespace _092lines
             hei = 600;
 
             // Specific animation params.
-            param = "width=1.0,anti=true,seed=12,a=70.0";
+            param = "width=1.0,anti=true,seed=12,a=56.0";
 
             // Tooltip = help.
-            tooltip = "width=<float>, anti=<bool>, seed=<int>, a=<float>...length of the edges of each cube";
+            tooltip = "width=<float>, anti=<bool>, seed=<int>, a=<float>...length of the edges of each cube (min=28.0)";
         }
 
         private static void MarkPoint(Canvas c, Color colorAfter, Point point, int lineLength)
@@ -585,7 +585,7 @@ namespace _092lines
                 MarkPoint(c, cubeColor, points[i], lineLength);
             }
 
-            // (MAYBE) TODO
+            // TODO (in future) ... so we have correct results available too, not just the problems
 
             // Slicing the cube:
             // This part of the code should highlight the sides of the polygon created by intersecting the cube and the plain defined by the 3 points in points[].
@@ -682,19 +682,52 @@ namespace _092lines
                     lineLength = (float)MathSupport.Arith.Clamp(lineLength, 28.0, 196.0);
             }
 
+            // Practical needed lengths:
+            const int padding = 10;
+            int cubeSize = (int)(1.5 * lineLength);
+            int gap = padding + cubeSize;
+            int actualHeight = c.Height - padding;
+            int actualWidth = c.Width - gap;
+
+            // Fun logging information (needed if no cubes are created):
+            int cubes = 0;
+
+            // Initialization:
             Color backgroundColor = Color.White;
             Color cubeColor = Color.Black;
-            const int padding = 10;
-            const int minLineLength = 10;
-            int startX = 300, startY = 300;
+            int currentX = padding;
+            int currentY = gap;
+
+            // Instancing the Random class:
             Random random = seed <= 0 ? new Random() : new Random(seed);
 
+            // Setting the Canvas:
             c.Clear(backgroundColor);
             c.SetPenWidth(penWidth);
             c.SetColor(cubeColor);
 
-            Cube cube = DrawCube(c, startX, startY, lineLength);
-            GenerateCubeSlice(c, cube, random, cubeColor);            
+            Cube cube;
+            while (currentY <= actualHeight)
+            {
+                while (currentX <= actualWidth)
+                {
+                    cube = DrawCube(c, currentX, currentY, lineLength);
+                    GenerateCubeSlice(c, cube, random, cubeColor);
+                    cubes++;
+
+                    currentX += gap;
+                }
+
+                currentX = padding;
+                currentY += gap;
+            }
+
+            if (cubes == 0)
+            {
+                // TODO
+            }
+
+            
 
             /*
             int wq = c.Width / 4;
