@@ -10,6 +10,14 @@ namespace _092lines
     {
         public Edge[] Edges { get; }
 
+        public bool EdgesTouching(Edge e1, Edge e2)
+        {
+            if (e1.Start == e2.Start || e1.Start == e2.End || e1.End == e2.Start || e1.End == e2.End)
+                return true;
+            else
+                return false;
+        }
+
         public static Faces GetOppositeFace(Faces f)
         {
             if ((int)f < 0 || (int)f > 5)
@@ -373,6 +381,12 @@ namespace _092lines
             c.SetColor(colorAfter);
         }
 
+        /// <summary>
+        /// Randoms an INNER point on the given edge using given instance of class Random (with used seed).
+        /// </summary>
+        /// <param name="random">Instance of Random class.</param>
+        /// <param name="e">Edge on which we want to random the point.</param>
+        /// <returns>Inner point on the given edge.</returns>
         private static Point GetRandomedPointOnEdge(Random random, Edge e)
         {
             int x1, x2, y1, y2;
@@ -400,11 +414,11 @@ namespace _092lines
 
             if (e.Vertical)
             {
-                return new Point(x1, random.Next(y1, y2 + 1));
+                return new Point(x1, random.Next(y1 + 1, y2));
             }
             else if (y1 == y2)
             {
-                return new Point(random.Next(x1, x2 + 1), y1);
+                return new Point(random.Next(x1 + 1, x2), y1);
             }
             else
             {
@@ -414,7 +428,7 @@ namespace _092lines
                 float k = (1.0f * u2) / u1;
                 float q = (-u2 * e.Start.X + u1 * e.Start.Y) / u1;
 
-                int x = random.Next(x1, x2 + 1);
+                int x = random.Next(x1 + 1, x2);
                 int y = (int)(k * x + q);
 
                 return new Point(x, y);
@@ -457,7 +471,7 @@ namespace _092lines
             c.Line(x, y, end.X, end.Y);
         }
 
-        private static void GenerateCubeSlice(Canvas c, Cube cube, Random random)
+        private static void GenerateCubeSlice(Canvas c, Cube cube, Random random, Color cubeColor)
         {
             List<int> possibleEdgeNums = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
             int[] edgeNums = new int[3];
@@ -493,7 +507,7 @@ namespace _092lines
                 for (int i = 0; i <= 11; i++)
                     sharesExcatlyOne[i] = false;
 
-                for (int i = 0; i<= 11; i++)
+                for (int i = 0; i <= 11; i++)
                 {
                     for (int j = 0; j <= 1; j++)
                     {
@@ -510,8 +524,10 @@ namespace _092lines
                 possibleEdgeNums = new List<int>();
                 for (int i = 0; i <= 11; i++)
                 {
-                    if (sharesExcatlyOne[i])
+                    if (sharesExcatlyOne[i] && !cube.EdgesTouching(cube.Edges[i], cube.Edges[edgeNums[0]]) && !cube.EdgesTouching(cube.Edges[i], cube.Edges[edgeNums[1]]))
+                    {
                         possibleEdgeNums.Add(i);
+                    }                        
                 }
 
                 edgeNums[2] = possibleEdgeNums[random.Next(0, possibleEdgeNums.Count)];
@@ -540,8 +556,8 @@ namespace _092lines
                     if (faces1[i] != oppositeFaces[0])
                         notOppositeFaces[0] = faces1[i];
 
-                    if (faces1[i] != oppositeFaces[1])
-                        notOppositeFaces[1] = faces1[i];
+                    if (faces2[i] != oppositeFaces[1])
+                        notOppositeFaces[1] = faces2[i];
                 }
 
                 possibleEdgeNums = new List<int>();
@@ -569,7 +585,7 @@ namespace _092lines
             {
                 points[i] = GetRandomedPointOnEdge(random, cube.Edges[edgeNums[i]]);
                 // Visualizing points:
-                MarkPoint(c, Color.White, points[i], lineLength);
+                MarkPoint(c, cubeColor, points[i], lineLength);
             }
 
             // TODO
@@ -672,7 +688,7 @@ namespace _092lines
             Random random = seed <= 0 ? new Random() : new Random(seed);
 
             Cube cube = DrawCube(c, startX, startY, lineLength);
-            GenerateCubeSlice(c, cube, random);
+            GenerateCubeSlice(c, cube, random, Color.White);
 
             
             /*
