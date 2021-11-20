@@ -687,6 +687,10 @@ namespace _092lines
             int startX = 300, startY = 300;
             Random random = seed <= 0 ? new Random() : new Random(seed);
 
+            c.Clear(Color.Black);
+            c.SetPenWidth(penWidth);
+            c.SetColor(Color.White);
+
             Cube cube = DrawCube(c, startX, startY, lineLength);
             GenerateCubeSlice(c, cube, random, Color.White);
 
