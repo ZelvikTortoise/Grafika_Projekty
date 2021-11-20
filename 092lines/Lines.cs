@@ -62,19 +62,48 @@ namespace _092lines
             // }}
         }
 
-        private static void DrawDashedLine(Canvas c, Point start, Point end, int maxDashes)
+        private static void DrawDashedLine(Canvas c, Point start, Point end)
         {
+            const int parts = 14;   // 3k + 2
+            int dx = (end.X - start.X) / parts;
+            int dy = (end.Y - start.Y) / parts;
+            int lines = (parts - 2) / 3 + 1;
 
+            int x = start.X;
+            int y = start.Y;
+            int newX = start.X + 2 * dx;
+            int newY = start.Y + 2 * dy;
+
+            for (int i = 1; i <= lines; i++)
+            {
+                c.Line(x, y, newX, newY);
+                x += 3 * dx;
+                newX += 3 * dx;
+                y += 3 * dy;
+                newY += 3 * dy;
+            }
+
+            int mx = Math.Sign(dx);
+            int my = Math.Sign(dy);
+
+            while (mx * newX < mx * end.X && my * newY < my * end.Y)
+            {
+                c.Line(x, y, newX, newY);
+                x += 3 * dx;
+                newX += 3 * dx;
+                y += 3 * dy;
+                newY += 3 * dy;
+            }
+
+            c.Line(x, y, end.X, end.Y);
+        }
+
+        private static void GenerateCubeSlice(Canvas c, Cube cube, Random random)
+        {
             // TODO
         }
 
-        private static void GenerateCubeSlice(Canvas c, Cube cube, int seed)
-        {
-            Random random = seed <= 0 ? new Random() : new Random(seed);
-            // TODO
-        }
-
-        private static Cube DrawCube(Canvas c, int startX, int startY, float lLength, int maxDashes)
+        private static Cube DrawCube(Canvas c, int startX, int startY, float lLength)
         {
             int len = (int)lLength;
             int lenh = (int)(0.5 * len);
@@ -117,15 +146,13 @@ namespace _092lines
             {
                 e = edges[i];
 
-                c.Line(e.Start.X, e.Start.Y, e.End.X, e.End.Y); // Remove.
-
                 if (e.Dashed)
                 {
-                    DrawDashedLine(c, e.Start, e.End, maxDashes);
+                    DrawDashedLine(c, e.Start, e.End);
                 }
                 else
                 {
-                    // c.Line(e.Start.X, e.Start.Y, e.End.X, e.End.Y);
+                    c.Line(e.Start.X, e.Start.Y, e.End.X, e.End.Y);
                 }
             }
 
@@ -143,7 +170,6 @@ namespace _092lines
             float penWidth = 1.0f;   // pen width
             bool antialias = true;  // use anti-aliasing?
             int seed = 12;     // random generator seed
-            int maxDashes = 10; // TODO
 
             Dictionary<string, string> p = Util.ParseKeyValueList(param);
             if (p.Count > 0)
@@ -167,11 +193,12 @@ namespace _092lines
 
             const int padding = 10;
             const int minLineLength = 10;
-            float lineLength = 66;
-            int startX = 100, startY = 100;
+            float lineLength = 150;
+            int startX = 300, startY = 300;
+            Random random = seed <= 0 ? new Random() : new Random(seed);
 
-            Cube cube = DrawCube(c, startX, startY, lineLength, maxDashes);
-            GenerateCubeSlice(c, cube, seed);
+            Cube cube = DrawCube(c, startX, startY, lineLength);
+            GenerateCubeSlice(c, cube, random);
 
             
             /*
