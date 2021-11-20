@@ -352,9 +352,7 @@ namespace _092lines
         /// <param name="tooltip">Optional tooltip = param help.</param>
         public static void InitParams(out string name, out int wid, out int hei, out string param, out string tooltip)
         {
-            // {{
-
-            // Put your name here.
+            // My name is here.
             name = "Lukáš Macek";
 
             // Image size in pixels.
@@ -362,12 +360,10 @@ namespace _092lines
             hei = 600;
 
             // Specific animation params.
-            param = "width=1.0,anti=true,seed=12";
+            param = "width=1.0,anti=true,seed=12,a=70.0";
 
             // Tooltip = help.
-            tooltip = "width=<int>, anti[=<bool>], seed=<int>";
-
-            // }}
+            tooltip = "width=<float>, anti=<bool>, seed=<int>, a=<float>...length of the edges of each cube";
         }
 
         private static void MarkPoint(Canvas c, Color colorAfter, Point point, int lineLength)
@@ -589,9 +585,14 @@ namespace _092lines
                 MarkPoint(c, cubeColor, points[i], lineLength);
             }
 
-            // TODO
-            // Slicing the cube:
+            // (MAYBE) TODO
 
+            // Slicing the cube:
+            // This part of the code should highlight the sides of the polygon created by intersecting the cube and the plain defined by the 3 points in points[].
+            // In Czech: Řez
+            // Ideas: Class Problem - has Cube, Point[3], ProblemType (= if | else if | else in this function above), ...
+            //        Then solve each type separately using two theorems (1. connecting points on the same face, 2. creating a parallel line on the opposite face).
+            //        Note: The points[] generation was managed in such way so nothing else should be needed to solve the problems.
         }
 
         private static Cube DrawCube(Canvas c, int startX, int startY, float lLength)
@@ -661,31 +662,30 @@ namespace _092lines
             float penWidth = 1.0f;   // pen width
             bool antialias = true;  // use anti-aliasing?
             int seed = 12;     // random generator seed
+            float lineLength = 56;  // edge length of cube
 
             Dictionary<string, string> p = Util.ParseKeyValueList(param);
             if (p.Count > 0)
             {
-                // with=<line-width>
+                // width=<float>
                 if (Util.TryParse(p, "width", ref penWidth))
-                {
-                    if (penWidth < 0.0f)
-                        penWidth = 0.0f;
-
                     penWidth = (float)MathSupport.Arith.Clamp(penWidth, 1.0, 10.0);
-                }
 
-                // anti[=<bool>]
+                // anti=<bool>
                 Util.TryParse(p, "anti", ref antialias);
 
                 // seed=<int>
                 Util.TryParse(p, "seed", ref seed);
+
+                // a=<float>
+                if (Util.TryParse(p, "a", ref lineLength))
+                    lineLength = (float)MathSupport.Arith.Clamp(lineLength, 28.0, 196.0);
             }
 
             Color backgroundColor = Color.White;
             Color cubeColor = Color.Black;
             const int padding = 10;
             const int minLineLength = 10;
-            float lineLength = 56;
             int startX = 300, startY = 300;
             Random random = seed <= 0 ? new Random() : new Random(seed);
 
@@ -694,9 +694,8 @@ namespace _092lines
             c.SetColor(cubeColor);
 
             Cube cube = DrawCube(c, startX, startY, lineLength);
-            GenerateCubeSlice(c, cube, random, cubeColor);
+            GenerateCubeSlice(c, cube, random, cubeColor);            
 
-            
             /*
             int wq = c.Width / 4;
             int hq = c.Height / 4;
