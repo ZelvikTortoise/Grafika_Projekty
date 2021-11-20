@@ -362,7 +362,18 @@ namespace _092lines
             // }}
         }
 
-        private static Point GetRandomedPointOnEdge (Random random, Edge e)
+        private static void MarkPoint(Canvas c, Color colorAfter, Point point, int lineLength)
+        {
+            c.SetColor(Color.Red);
+            int d = lineLength / 14;
+
+            c.Line(point.X - d, point.Y - d, point.X + d, point.Y + d);
+            c.Line(point.X - d, point.Y + d, point.X + d, point.Y - d);
+
+            c.SetColor(colorAfter);
+        }
+
+        private static Point GetRandomedPointOnEdge(Random random, Edge e)
         {
             int x1, x2, y1, y2;
             x1 = e.Start.X;
@@ -387,7 +398,27 @@ namespace _092lines
                 }
             }
 
-            return new Point(random.Next(x1, x2 + 1), random.Next(y1, y2 + 1));
+            if (e.Vertical)
+            {
+                return new Point(x1, random.Next(y1, y2 + 1));
+            }
+            else if (y1 == y2)
+            {
+                return new Point(random.Next(x1, x2 + 1), y1);
+            }
+            else
+            {
+                // Using a bit of analytic geometry:
+                int u1 = e.End.X - e.Start.X;
+                int u2 = e.End.Y - e.Start.Y;
+                float k = (1.0f * u2) / u1;
+                float q = (-u2 * e.Start.X + u1 * e.Start.Y) / u1;
+
+                int x = random.Next(x1, x2 + 1);
+                int y = (int)(k * x + q);
+
+                return new Point(x, y);
+            }
         }
 
         private static void DrawDashedLine(Canvas c, Point start, Point end)
@@ -529,17 +560,19 @@ namespace _092lines
                 edgeNums[2] = possibleEdgeNums[random.Next(0, possibleEdgeNums.Count)];
             }
 
+            // Getting the line length:
+            int lineLength = cube.Edges[0].End.X - cube.Edges[0].Start.X;
+
             // Randoming points on already randomed edges:
             Point[] points = new Point[3];
             for (int i = 0; i <= 2; i++)
             {
-                points[i] = GetRandomedPointOnEdge(random, cube.Edges[edgeNums[i]]);                
+                points[i] = GetRandomedPointOnEdge(random, cube.Edges[edgeNums[i]]);
+                // Visualizing points:
+                MarkPoint(c, Color.White, points[i], lineLength);
             }
 
             // TODO
-            // Visualizing points:
-
-
             // Slicing the cube:
 
         }
