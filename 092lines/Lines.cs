@@ -438,14 +438,14 @@ namespace _092lines
         private static void DrawDashedLine(Canvas c, Point start, Point end)
         {
             const int parts = 14;   // 3k + 2
-            int dx = (end.X - start.X) / parts;
-            int dy = (end.Y - start.Y) / parts;
+            float dx = (1.0f * (end.X - start.X)) / parts;
+            float dy = (1.0f * (end.Y - start.Y)) / parts;
             int lines = (parts - 2) / 3 + 1;
 
-            int x = start.X;
-            int y = start.Y;
-            int newX = start.X + 2 * dx;
-            int newY = start.Y + 2 * dy;
+            float x = start.X;
+            float y = start.Y;
+            float newX = (int)(start.X + 2 * dx);
+            float newY = (int)(start.Y + 2 * dy);
 
             for (int i = 1; i <= lines; i++)
             {
@@ -468,7 +468,8 @@ namespace _092lines
                 newY += 3 * dy;
             }
 
-            c.Line(x, y, end.X, end.Y);
+            if (mx * x < mx * end.X && my * y < my * end.Y)
+                c.Line(x, y, end.X, end.Y);
         }
 
         private static void GenerateCubeSlice(Canvas c, Cube cube, Random random, Color cubeColor)
@@ -669,6 +670,8 @@ namespace _092lines
                 {
                     if (penWidth < 0.0f)
                         penWidth = 0.0f;
+
+                    penWidth = (float)MathSupport.Arith.Clamp(penWidth, 1.0, 10.0);
                 }
 
                 // anti[=<bool>]
@@ -678,21 +681,20 @@ namespace _092lines
                 Util.TryParse(p, "seed", ref seed);
             }
 
-            // TODO:
-            // c.Line(x1, y1, x2, y2);
-
+            Color backgroundColor = Color.White;
+            Color cubeColor = Color.Black;
             const int padding = 10;
             const int minLineLength = 10;
-            float lineLength = 150;
+            float lineLength = 56;
             int startX = 300, startY = 300;
             Random random = seed <= 0 ? new Random() : new Random(seed);
 
-            c.Clear(Color.Black);
+            c.Clear(backgroundColor);
             c.SetPenWidth(penWidth);
-            c.SetColor(Color.White);
+            c.SetColor(cubeColor);
 
             Cube cube = DrawCube(c, startX, startY, lineLength);
-            GenerateCubeSlice(c, cube, random, Color.White);
+            GenerateCubeSlice(c, cube, random, cubeColor);
 
             
             /*
