@@ -10,6 +10,80 @@ namespace _092lines
     {
         public Edge[] Edges { get; }
 
+        public static Faces GetOppositeFace(Faces f)
+        {
+            if ((int)f < 0 || (int)f > 5)
+            {
+                throw new ArgumentException($"{nameof(GetOppositeFace)} function: Indeces of the enum {nameof(Faces)} can be only from 0 to 5.\nRecieved value: {f}, index: {(int)f}.");
+            }
+
+            switch (f)
+            {
+                case Faces.Down:
+                    return Faces.Up;
+                case Faces.Front:
+                        return Faces.Back;
+                case Faces.Right:
+                    return Faces.Left;
+                case Faces.Back:
+                    return Faces.Front;
+                case Faces.Left:
+                    return Faces.Right;
+                case Faces.Up:
+                    return Faces.Down;
+                default:
+                    throw new ArgumentException($"{nameof(GetOppositeFace)} function: Unknown value of the enum {nameof(Faces)}.\nRecieved value: {f}.");
+            }                
+        }
+
+        public static bool GetCommonEdgeNum(Faces f1, Faces f2, out int edgeNum)
+        {
+            if (Cube.FacesOpposite(f1, f2))
+            {
+                edgeNum = -1;
+                return false;
+            }
+
+            int[] eNums1 = Cube.GetEdgeNums(f1);
+            int[] eNums2 = Cube.GetEdgeNums(f2);
+
+            for (int i = 0; i <= 3; i++)
+            {
+                for (int j = 0; j <= 3; j++)
+                {
+                    if (eNums1[i] == eNums2[j])
+                    {
+                        edgeNum = eNums1[i];
+                        return true;
+                    }                        
+                }
+            }
+
+            edgeNum = -2;
+            return false;
+        }
+
+        public static bool GetCommonFace(int e1, int e2, out Faces face)
+        {
+            Faces[] faces1 = Cube.GetEdgeFaces(e1);
+            Faces[] faces2 = Cube.GetEdgeFaces(e2);
+
+            for (int i = 0; i <= 1; i++)
+            {
+                for (int j = 0; j <= 1; j++)
+                {
+                    if (faces1[i] == faces2[j])
+                    {
+                        face = faces1[i];
+                        return true;
+                    }
+                }
+            }
+
+            face = Faces.Down;
+            return false;
+        }
+
         public static bool FacesOpposite(Faces f1, Faces f2)
         {
             // Argument range:
@@ -288,6 +362,34 @@ namespace _092lines
             // }}
         }
 
+        private static Point GetRandomedPointOnEdge (Random random, Edge e)
+        {
+            int x1, x2, y1, y2;
+            x1 = e.Start.X;
+            x2 = e.End.X;
+            y1 = e.Start.Y;
+            y2 = e.End.Y;
+
+            {
+                int temp;
+                if (x1 > x2)
+                {
+                    temp = x1;
+                    x1 = x2;
+                    x2 = temp;
+                }
+
+                if (y1 > y2)
+                {
+                    temp = y1;
+                    y1 = y2;
+                    y2 = temp;
+                }
+            }
+
+            return new Point(random.Next(x1, x2 + 1), random.Next(y1, y2 + 1));
+        }
+
         private static void DrawDashedLine(Canvas c, Point start, Point end)
         {
             const int parts = 14;   // 3k + 2
@@ -385,12 +487,61 @@ namespace _092lines
             }
             else
             {
+                Faces[] faces1 = Cube.GetEdgeFaces(edgeNums[0]);
+                Faces[] faces2 = Cube.GetEdgeFaces(edgeNums[1]);
+                Faces[] oppositeFaces = new Faces[2];
+                for (int i = 0; i <= 1; i++)
+                {
+                    for (int j = 0; j <= 1; j++)
+                    {
+                        if (Cube.FacesOpposite(faces1[i], faces2[j]))
+                        {
+                            oppositeFaces[0] = faces1[i];
+                            oppositeFaces[1] = faces2[j];
+                            break;
+                        }
+                    }
+                }
 
+                Faces[] notOppositeFaces = new Faces[2];
+                for (int i = 0; i <= 1; i++)
+                {
+                    if (faces1[i] != oppositeFaces[0])
+                        notOppositeFaces[0] = faces1[i];
+
+                    if (faces1[i] != oppositeFaces[1])
+                        notOppositeFaces[1] = faces1[i];
+                }
+
+                possibleEdgeNums = new List<int>();
+                for (int i = 0; i <= 1; i++)
+                {
+                    if (Cube.GetCommonEdgeNum(oppositeFaces[i], notOppositeFaces[1 - i], out edgeNum))
+                        possibleEdgeNums.Add(edgeNum);
+                    else
+                        throw new Exception("Not able to get the common edge while getting the 3rd edge in the case where there should exist excatly one edge being common between the faces touching the edges.");
+
+                    if (Cube.GetCommonEdgeNum(oppositeFaces[i], Cube.GetOppositeFace(notOppositeFaces[1 - i]), out edgeNum))
+                        possibleEdgeNums.Add(edgeNum);
+                    else
+                        throw new Exception("Not able to get the common edge while getting the 3rd edge in the case where there should exist excatly one edge being common between the faces touching the edges.");
+                }
+                edgeNums[2] = possibleEdgeNums[random.Next(0, possibleEdgeNums.Count)];
             }
 
-            // int x = cube.Edges[1].Start.X;
+            // Randoming points on already randomed edges:
+            Point[] points = new Point[3];
+            for (int i = 0; i <= 2; i++)
+            {
+                points[i] = GetRandomedPointOnEdge(random, cube.Edges[edgeNums[i]]);                
+            }
 
             // TODO
+            // Visualizing points:
+
+
+            // Slicing the cube:
+
         }
 
         private static Cube DrawCube(Canvas c, int startX, int startY, float lLength)
