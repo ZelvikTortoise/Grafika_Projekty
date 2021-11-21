@@ -376,10 +376,10 @@ namespace _092lines
             hei = 600;
 
             // Specific animation params.
-            param = "width=1.0,anti=true,seed=12,a=56.0,gen=true,dash=false";
+            param = "width=1.0,anti=true,seed=12,a=56.0,gen=true,dash=true";
 
             // Tooltip = help.
-            tooltip = "width=<float>, anti=<bool>, seed=<int>, a=<float>...length of the edges of each cube (min=28.0, max=196.0), gen=<bool>...try generate cubes?, dash=<bool>...hidden crosses dashed?";
+            tooltip = "width=<float>, anti=<bool>, seed=<int>, a=<float>...length of the edges of each cube (min=28.0, max=196.0), gen=<bool>...try generate cubes?, dash=<bool>...hidden lines dashed (including crosses)?";
         }
 
         private static void MarkPoint(Canvas c, Color colorAfter, Point point, int lineLength, bool dashed)
@@ -623,7 +623,7 @@ namespace _092lines
             //        Note: The points[] generation was managed in such way so nothing else should be needed to solve the problems.
         }
 
-        private static Cube DrawCube(Canvas c, int startX, int startY, float lLength)
+        private static Cube DrawCube(Canvas c, int startX, int startY, float lLength, bool useDashing)
         {
             int len = (int)lLength;
             int lenh = (int)(0.5 * len);
@@ -643,6 +643,7 @@ namespace _092lines
             Point G = new Point(startX + lenhhh, startY - lenhhh);
             Point H = new Point(startX + lenh, startY - lenhhh);
 
+            // In order 0–11:
             Edge AB = new Edge(A, B, false);
             Edge BC = new Edge(B, C, false);
             Edge CD = new Edge(C, D, true); // dahsed
@@ -666,7 +667,7 @@ namespace _092lines
             {
                 e = edges[i];
 
-                if (e.Dashed)
+                if (e.Dashed && useDashing)
                 {
                     DrawDashedLine(c, e.Start, e.End);
                 }
@@ -692,7 +693,7 @@ namespace _092lines
             int seed = 12;     // random generator seed
             float lineLength = 56;  // edge length of cube
             bool generateCubes = true; // generate cubes if possible?
-            bool dashedHiddenCrosses = false; // dash hidden crosses?
+            bool dashedHiddenLines = false; // dash hidden lines including crosses?
 
             Dictionary<string, string> p = Util.ParseKeyValueList(param);
             if (p.Count > 0)
@@ -715,7 +716,7 @@ namespace _092lines
                 Util.TryParse(p, "gen", ref generateCubes);
 
                 // dash=<bool>
-                Util.TryParse(p, "dash", ref dashedHiddenCrosses);
+                Util.TryParse(p, "dash", ref dashedHiddenLines);
             }
 
             // Practical needed lengths:
@@ -749,8 +750,8 @@ namespace _092lines
                 {
                     while (currentX <= actualWidth)
                     {
-                        cube = DrawCube(c, currentX, currentY, lineLength);
-                        GenerateCubeSlice(c, cube, random, cubeColor, dashedHiddenCrosses);
+                        cube = DrawCube(c, currentX, currentY, lineLength, dashedHiddenLines);
+                        GenerateCubeSlice(c, cube, random, cubeColor, dashedHiddenLines);
                         cubes++;
 
                         currentX += gap;
