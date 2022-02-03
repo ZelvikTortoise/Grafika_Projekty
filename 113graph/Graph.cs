@@ -24,7 +24,7 @@ namespace _113graph
       expr            = "1.0";
       trackballButton = MouseButtons.Left;
 
-      name            = "Josef Pelikán";
+      name            = "Lukáš Macek";
     }
 
     /// <summary>
