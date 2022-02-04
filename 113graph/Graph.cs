@@ -84,7 +84,7 @@ namespace _113graph
     /// <summary>
     /// Number of vertices (indices) to draw.. (default = draw only triangles)
     /// </summary>
-    int vertices = 0;
+    int vertexIndeces = 0;
 
     /// <summary>
     /// Vertices have texture coordinates.
@@ -200,6 +200,8 @@ namespace _113graph
         z += dz;
       }
 
+      int numberOfVertices = 51 * 51;
+
       //------------------------------------------------------------------
       // Data for VBO.
 
@@ -217,9 +219,9 @@ namespace _113graph
       if (haveNormals)
         stride += Vector3.SizeInBytes;
 
-      long newVboSize = stride * 4;     // pilot .. four vertices
-      vertices = 6;                     // pilot .. six indices
-      long newIndexSize = sizeof(uint) * vertices;
+      long newVboSize = stride * numberOfVertices;     // pilot ... four vertices
+      vertexIndeces = 6;                     // pilot ... six indices
+      long newIndexSize = sizeof(uint) * vertexIndeces;
 
       // Vertex array: [texture:2D] [color:3D] [normal:3D] coordinate:3D
       GL.BindBuffer(BufferTarget.ArrayBuffer, VBOid[0]);
@@ -241,6 +243,18 @@ namespace _113graph
 
         // [s t] [R G B] [N_x N_y N_z] x y z
 
+        for (int i = 0; i < numberOfVertices; i++)
+        {
+          // Vertex[i]
+          *ptr++ = r;
+          *ptr++ = g;
+          *ptr++ = b;
+          *ptr++ = v.X;
+          *ptr++ = v.Y;
+          *ptr++ = v.Z;
+        }
+
+        /*/
         // Vertex[0]
         *ptr++ = r;
         *ptr++ = g;
@@ -272,6 +286,7 @@ namespace _113graph
         *ptr++ = v.X + 1.0f;
         *ptr++ = v.Y - 0.2f;
         *ptr++ = v.Z + 1.0f;
+        /*/
       }
       GL.UnmapBuffer(BufferTarget.ArrayBuffer);
       GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
@@ -318,7 +333,7 @@ namespace _113graph
       near     =  0.1f;
       far      = 20.0f;
 
-      Form1.form.SetStatus($"Tri: {vertices / 3}");
+      Form1.form.SetStatus($"Tri: {vertexIndeces / 3}");
 
       return null;
 
@@ -629,7 +644,7 @@ namespace _113graph
         // Triangle part of the scene.
         // Draw total 'vertices' vertices from the beginning of the index-buffer,
         // that gives us 'vertices/3' triangles.
-        GL.DrawElements(PrimitiveType.Triangles, vertices, DrawElementsType.UnsignedInt, IntPtr.Zero);
+        GL.DrawElements(PrimitiveType.Triangles, vertexIndeces, DrawElementsType.UnsignedInt, IntPtr.Zero);
         GlInfo.LogError("draw-elements-shader");
 
         // How to draw lines (e.g. coordinate axes):
@@ -637,7 +652,7 @@ namespace _113graph
         // lineVertices ... number of vertex indices for lines (e.g. 'lineVertices/2' lines)
         // lineOffset   ... start offset in the index-buffer
 
-        primitiveCounter += vertices / 3;
+        primitiveCounter += vertexIndeces / 3;
 
         // !!!}}
 
