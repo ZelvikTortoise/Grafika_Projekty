@@ -84,7 +84,7 @@ namespace _113graph
     /// <summary>
     /// Number of vertices (indices) to draw.. (default = draw only triangles)
     /// </summary>
-    int vertexIndeces = 0;
+    int numberOfTriangleIndeces = 0;
 
     /// <summary>
     /// Vertices have texture coordinates.
@@ -156,6 +156,11 @@ namespace _113graph
       double dx = (dom[1]-dom[0]) / 50;
       double z = dom[2];
       double dz = (dom[3]-dom[2]) / 50;
+      int maxVertexIndexX = 50;
+      int maxVertexIndexZ = 50;
+      int numberOfVertices = (maxVertexIndexX + 1) * (maxVertexIndexZ + 1);
+      numberOfTriangleIndeces = 6 * maxVertexIndexX * maxVertexIndexZ;
+      float r, g, b;
 
       Expression e = null;
       double result;
@@ -178,37 +183,13 @@ namespace _113graph
         return ex.Message;
       }
 
-      // The calculation of vertices:
-      for (int i = 0; i <= 50; i++)
-      {        
-        // Example of regular expression evaluation
-        // (no need to use try-catch block here)
-        e.Parameters["x"] = x;
-        e.Parameters["y"] = z;
-        e.Parameters["z"] = z;
-        result = (double)e.Evaluate();
-        if (double.IsNaN(result) ||       // e.g. 0/0 or asin(1.1)
-            double.IsInfinity(result))    // e.g. 1/0
-          result = 0.0;
-
-        // Everything seems to be OK.
-        expression = expr;
-        param = par;
-
-        v = new Vector3((float)x, (float)result, (float)z);
-        x += dx;
-        z += dz;
-      }
-
-      int numberOfVertices = 51 * 51;
-
       //------------------------------------------------------------------
       // Data for VBO.
 
       // This has to be in sync with the actual buffer filling loop (see the unsafe
       // block below)!
       haveTexture = false;
-      haveColors  = true;
+      haveColors = true;
       haveNormals = false;
 
       stride = Vector3.SizeInBytes;
@@ -220,8 +201,8 @@ namespace _113graph
         stride += Vector3.SizeInBytes;
 
       long newVboSize = stride * numberOfVertices;     // pilot ... four vertices
-      vertexIndeces = 6;                     // pilot ... six indices
-      long newIndexSize = sizeof(uint) * vertexIndeces;
+      numberOfTriangleIndeces = 6;                     // pilot ... six indices
+      long newIndexSize = sizeof(uint) * numberOfTriangleIndeces;
 
       // Vertex array: [texture:2D] [color:3D] [normal:3D] coordinate:3D
       GL.BindBuffer(BufferTarget.ArrayBuffer, VBOid[0]);
@@ -232,61 +213,89 @@ namespace _113graph
       }
 
       IntPtr videoMemoryPtr = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
-      unsafe
+
+      // The calculation of vertices:
+      for (int i = 0; i <= maxVertexIndexX; i++)
       {
-        float* ptr = (float*)videoMemoryPtr.ToPointer();
-
-        // !!! TODO: you definitely need to change this part (only two triangles are defined here)!
-        float r = 0.1f;
-        float g = 0.9f;
-        float b = 0.7f;
-
-        // [s t] [R G B] [N_x N_y N_z] x y z
-
-        for (int i = 0; i < numberOfVertices; i++)
+        for (int j = 0; j <= maxVertexIndexZ; j++)
         {
-          // Vertex[i]
-          *ptr++ = r;
-          *ptr++ = g;
-          *ptr++ = b;
-          *ptr++ = v.X;
-          *ptr++ = v.Y;
-          *ptr++ = v.Z;
+          // Example of regular expression evaluation
+          // (no need to use try-catch block here)
+          e.Parameters["x"] = x;
+          e.Parameters["y"] = z;
+          e.Parameters["z"] = z;
+          result = (double)e.Evaluate();
+          if (double.IsNaN(result) ||       // e.g. 0/0 or asin(1.1)
+              double.IsInfinity(result))    // e.g. 1/0
+            result = 0.0;
+
+          // Everything seems to be OK.
+          expression = expr;
+          param = par;
+
+          v = new Vector3((float)x, (float)result, (float)z);
+
+          unsafe
+          {
+            float* ptr = (float*)videoMemoryPtr.ToPointer();
+
+            r = 0.1f;
+            g = 0.9f;
+            b = 0.7f;
+
+            // Possibly:
+            // [s t] [R G B] [N_x N_y N_z] x y z
+
+            // Actually:
+            // [R G B] x y z
+
+            // Vertex[i]
+            *ptr++ = r;
+            *ptr++ = g;
+            *ptr++ = b;
+            *ptr++ = v.X;
+            *ptr++ = v.Y;
+            *ptr++ = v.Z;
+
+            /*/
+            // Vertex[0]
+            *ptr++ = r;
+            *ptr++ = g;
+            *ptr++ = b;
+            *ptr++ = v.X;
+            *ptr++ = v.Y - 0.2f;
+            *ptr++ = v.Z;
+
+            // Vertex[1]
+            *ptr++ = r;
+            *ptr++ = g;
+            *ptr++ = b - 0.6f;
+            *ptr++ = v.X + 1.0f;
+            *ptr++ = v.Y;
+            *ptr++ = v.Z;
+
+            // Vertex[2]
+            *ptr++ = r;
+            *ptr++ = g;
+            *ptr++ = b;
+            *ptr++ = v.X;
+            *ptr++ = v.Y;
+            *ptr++ = v.Z + 1.0f;
+
+            // Vertex[3]
+            *ptr++ = r + 0.8f;
+            *ptr++ = g - 0.8f;
+            *ptr++ = b;
+            *ptr++ = v.X + 1.0f;
+            *ptr++ = v.Y - 0.2f;
+            *ptr++ = v.Z + 1.0f;
+            /*/
+          }
+          x += dx;
         }
 
-        /*/
-        // Vertex[0]
-        *ptr++ = r;
-        *ptr++ = g;
-        *ptr++ = b;
-        *ptr++ = v.X;
-        *ptr++ = v.Y - 0.2f;
-        *ptr++ = v.Z;
-
-        // Vertex[1]
-        *ptr++ = r;
-        *ptr++ = g;
-        *ptr++ = b - 0.6f;
-        *ptr++ = v.X + 1.0f;
-        *ptr++ = v.Y;
-        *ptr++ = v.Z;
-
-        // Vertex[2]
-        *ptr++ = r;
-        *ptr++ = g;
-        *ptr++ = b;
-        *ptr++ = v.X;
-        *ptr++ = v.Y;
-        *ptr++ = v.Z + 1.0f;
-
-        // Vertex[3]
-        *ptr++ = r + 0.8f;
-        *ptr++ = g - 0.8f;
-        *ptr++ = b;
-        *ptr++ = v.X + 1.0f;
-        *ptr++ = v.Y - 0.2f;
-        *ptr++ = v.Z + 1.0f;
-        /*/
+        x = dom[0];
+        z += dz;
       }
       GL.UnmapBuffer(BufferTarget.ArrayBuffer);
       GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
@@ -333,7 +342,7 @@ namespace _113graph
       near     =  0.1f;
       far      = 20.0f;
 
-      Form1.form.SetStatus($"Tri: {vertexIndeces / 3}");
+      Form1.form.SetStatus($"Tri: {numberOfTriangleIndeces / 3}");
 
       return null;
 
@@ -644,7 +653,7 @@ namespace _113graph
         // Triangle part of the scene.
         // Draw total 'vertices' vertices from the beginning of the index-buffer,
         // that gives us 'vertices/3' triangles.
-        GL.DrawElements(PrimitiveType.Triangles, vertexIndeces, DrawElementsType.UnsignedInt, IntPtr.Zero);
+        GL.DrawElements(PrimitiveType.Triangles, numberOfTriangleIndeces, DrawElementsType.UnsignedInt, IntPtr.Zero);
         GlInfo.LogError("draw-elements-shader");
 
         // How to draw lines (e.g. coordinate axes):
@@ -652,7 +661,7 @@ namespace _113graph
         // lineVertices ... number of vertex indices for lines (e.g. 'lineVertices/2' lines)
         // lineOffset   ... start offset in the index-buffer
 
-        primitiveCounter += vertexIndeces / 3;
+        primitiveCounter += numberOfTriangleIndeces / 3;
 
         // !!!}}
 
