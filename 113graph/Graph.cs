@@ -159,7 +159,7 @@ namespace _113graph
       uint maxVertexIndexX = 50;
       uint maxVertexIndexZ = 50;
       uint numberOfVertices = (maxVertexIndexX + 1) * (maxVertexIndexZ + 1);
-      numberOfTriangleIndeces = (int)(6 * maxVertexIndexX * maxVertexIndexZ);
+      numberOfTriangleIndeces = (int)(6 * maxVertexIndexX * maxVertexIndexZ); // pilot ... indices
       uint dRow = maxVertexIndexX + 1;
       float r, g, b;
 
@@ -201,8 +201,7 @@ namespace _113graph
       if (haveNormals)
         stride += Vector3.SizeInBytes;
 
-      long newVboSize = stride * numberOfVertices;     // pilot ... four vertices
-      numberOfTriangleIndeces = 6;                     // pilot ... six indices
+      long newVboSize = stride * numberOfVertices;     // pilot ... vertices
       long newIndexSize = sizeof(uint) * numberOfTriangleIndeces;
 
       // Vertex array: [texture:2D] [color:3D] [normal:3D] coordinate:3D
@@ -321,14 +320,14 @@ namespace _113graph
           for (uint j = 0; j < maxVertexIndexX; j++)
           {
             // Triangle[2 * (i * dRow + j)]
-            ptr[6 * (i * dRow + j)] = i * dRow + j;
-            ptr[6 * (i * dRow + j) + 1] = (i + 1) * dRow + j + 1;
-            ptr[6 * (i * dRow + j) + 2] = i * dRow + j + 1;
+            ptr[6 * (i * (dRow - 1) + j)] = i * dRow + j;
+            ptr[6 * (i * (dRow - 1) + j) + 1] = (i + 1) * dRow + j + 1;
+            ptr[6 * (i * (dRow - 1) + j) + 2] = i * dRow + j + 1;
 
             // Triangle[2 * (i * dRow + j) + 1]
-            ptr[6 * (i * dRow + j) + 3] = i * dRow + j;
-            ptr[6 * (i * dRow + j) + 4] = (i + 1) * dRow;
-            ptr[6 * (i * dRow + j) + 5] = (i + 1) * dRow + j + 1;
+            ptr[6 * (i * (dRow - 1) + j) + 3] = i * dRow + j;
+            ptr[6 * (i * (dRow - 1) + j) + 4] = (i + 1) * dRow;
+            ptr[6 * (i * (dRow - 1) + j) + 5] = (i + 1) * dRow + j + 1;
           }
         }
 
