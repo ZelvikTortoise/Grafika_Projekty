@@ -215,9 +215,9 @@ namespace _113graph
       IntPtr videoMemoryPtr = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
 
       // The calculation of vertices:
-      for (int i = 0; i <= maxVertexIndexX; i++)
+      for (int i = 0; i <= maxVertexIndexZ; i++)
       {
-        for (int j = 0; j <= maxVertexIndexZ; j++)
+        for (int j = 0; j <= maxVertexIndexX; j++)
         {
           // Example of regular expression evaluation
           // (no need to use try-catch block here)
