@@ -156,10 +156,11 @@ namespace _113graph
       double dx = (dom[1]-dom[0]) / 50;
       double z = dom[2];
       double dz = (dom[3]-dom[2]) / 50;
-      int maxVertexIndexX = 50;
-      int maxVertexIndexZ = 50;
-      int numberOfVertices = (maxVertexIndexX + 1) * (maxVertexIndexZ + 1);
-      numberOfTriangleIndeces = 6 * maxVertexIndexX * maxVertexIndexZ;
+      uint maxVertexIndexX = 50;
+      uint maxVertexIndexZ = 50;
+      uint numberOfVertices = (maxVertexIndexX + 1) * (maxVertexIndexZ + 1);
+      numberOfTriangleIndeces = (int)(6 * maxVertexIndexX * maxVertexIndexZ);
+      uint dRow = maxVertexIndexX + 1;
       float r, g, b;
 
       Expression e = null;
@@ -315,6 +316,23 @@ namespace _113graph
 
         uint* ptr = (uint*)videoMemoryPtr.ToPointer();
 
+        for (uint i = 0; i < maxVertexIndexZ; i++)
+        {
+          for (uint j = 0; j < maxVertexIndexX; j++)
+          {
+            // Triangle[i * dRow + j]
+            ptr[i * dRow + 6 * j] = i * dRow + j;
+            ptr[i * dRow + 6 * j + 1] = (i + 1) * dRow + j + 1;
+            ptr[i * dRow + 6 * j + 2] = i * dRow + j + 1;
+
+            // Triangle[i * dRow + j + 1]
+            ptr[i * dRow + 6 * j + 3] = i * dRow + j;
+            ptr[i * dRow + 6 * j + 4] = (i + 1) * dRow;
+            ptr[i * dRow + 6 * j + 5] = (i + 1) * dRow + j + 1;
+          }
+        }
+
+        /*/
         // Triangle[0]: [0, 1, 2]
         ptr[0] = 0;
         ptr[1] = 1;
@@ -324,6 +342,7 @@ namespace _113graph
         ptr[3] = 2;
         ptr[4] = 1;
         ptr[5] = 3;
+        /*/
       }
       GL.UnmapBuffer(BufferTarget.ElementArrayBuffer);
       GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
