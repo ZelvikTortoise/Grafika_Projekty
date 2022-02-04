@@ -151,9 +151,16 @@ namespace _113graph
       //------------------------------------------------------------------
       // Expression evaluation  - THIS HAS TO BE CHANGED!
 
-      double x = -0.5, z = -0.5;
+      // Domain = grid 50 times 50 of rectangles:
+      double x = dom[0];
+      double dx = (dom[1]-dom[0]) / 50;
+      double z = dom[2];
+      double dz = (dom[3]-dom[2]) / 50;
+
       Expression e = null;
       double result;
+
+      Vector3  v = new Vector3();
 
       // Checking expression syntax first (only once).
       try
@@ -171,20 +178,27 @@ namespace _113graph
         return ex.Message;
       }
 
-      // Example of regular expression evaluation
-      // (no need to use try-catch block here)
-      e.Parameters["x"] = x;
-      e.Parameters["y"] = z;
-      e.Parameters["z"] = z;
-      result = (double)e.Evaluate();
-      if (double.IsNaN(result) ||       // e.g. 0/0 or asin(1.1)
-          double.IsInfinity(result))    // e.g. 1/0
-        result = 0.0;
+      // The calculation of vertices:
+      for (int i = 0; i < 50; i++)
+      {        
+        // Example of regular expression evaluation
+        // (no need to use try-catch block here)
+        e.Parameters["x"] = x;
+        e.Parameters["y"] = z;
+        e.Parameters["z"] = z;
+        result = (double)e.Evaluate();
+        if (double.IsNaN(result) ||       // e.g. 0/0 or asin(1.1)
+            double.IsInfinity(result))    // e.g. 1/0
+          result = 0.0;
 
-      // Everything seems to be OK.
-      expression = expr;
-      param = par;
-      Vector3  v = new Vector3((float)x, (float)result, (float)z);
+        // Everything seems to be OK.
+        expression = expr;
+        param = par;
+
+        v = new Vector3((float)x, (float)result, (float)z);
+        x += dx;
+        z += dz;
+      }
 
       //------------------------------------------------------------------
       // Data for VBO.
@@ -407,6 +421,7 @@ namespace _113graph
 
       GlInfo.LogError("create-texture");
 
+      texName = 0;  // No texture used.
       return texName;
     }
 
