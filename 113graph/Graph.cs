@@ -179,7 +179,7 @@ namespace _113graph
       }
 
       // The calculation of vertices:
-      for (int i = 0; i < 50; i++)
+      for (int i = 0; i <= 50; i++)
       {        
         // Example of regular expression evaluation
         // (no need to use try-catch block here)
