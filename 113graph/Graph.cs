@@ -122,7 +122,7 @@ namespace _113graph
           par == param)
         return null;                // nothing has changed => nothing to do..
 
-      double xMin = -1.0, xMax = 1.0, yMin = -1.0, yMax = 1.0;
+      double xMin = -1.0, xMax = 1.0, zMin = -1.0, zMax = 1.0;
 
       //------------------------------------------------------------------
       // Input text params (form).
@@ -142,8 +142,8 @@ namespace _113graph
       {
         xMin = dom[0];
         xMax = Math.Max(xMin + 1.0e-6, dom[1]);
-        yMin = dom[2];
-        yMax = Math.Max(yMin + 1.0e-6, dom[3]);
+        zMin = dom[2];
+        zMax = Math.Max(zMin + 1.0e-6, dom[3]);
       }
 
       // !!! TODO: triangle mesh size (triangle number along X-axis & along Z-axis)
@@ -152,10 +152,10 @@ namespace _113graph
       // Expression evaluation  - THIS HAS TO BE CHANGED!
 
       // Domain = grid 50 times 50 of rectangles:
-      double x = dom[0];
-      double dx = (dom[1]-dom[0]) / 50;
-      double z = dom[2];
-      double dz = (dom[3]-dom[2]) / 50;
+      double x = xMin;
+      double dx = (xMax - xMin) / 50;
+      double z = zMin;
+      double dz = (zMax - zMin) / 50;
       uint maxVertexIndexX = 50;
       uint maxVertexIndexZ = 50;
       uint numberOfVertices = (maxVertexIndexX + 1) * (maxVertexIndexZ + 1);
@@ -295,7 +295,7 @@ namespace _113graph
           x += dx;
         }
 
-        x = dom[0];
+        x = xMin;
         z += dz;
       }
       GL.UnmapBuffer(BufferTarget.ArrayBuffer);
@@ -320,15 +320,15 @@ namespace _113graph
         {
           for (uint j = 0; j < maxVertexIndexX; j++)
           {
-            // Triangle[i * dRow + j]
-            ptr[i * dRow + 6 * j] = i * dRow + j;
-            ptr[i * dRow + 6 * j + 1] = (i + 1) * dRow + j + 1;
-            ptr[i * dRow + 6 * j + 2] = i * dRow + j + 1;
+            // Triangle[2 * (i * dRow + j)]
+            ptr[6 * (i * dRow + j)] = i * dRow + j;
+            ptr[6 * (i * dRow + j) + 1] = (i + 1) * dRow + j + 1;
+            ptr[6 * (i * dRow + j) + 2] = i * dRow + j + 1;
 
-            // Triangle[i * dRow + j + 1]
-            ptr[i * dRow + 6 * j + 3] = i * dRow + j;
-            ptr[i * dRow + 6 * j + 4] = (i + 1) * dRow;
-            ptr[i * dRow + 6 * j + 5] = (i + 1) * dRow + j + 1;
+            // Triangle[2 * (i * dRow + j) + 1]
+            ptr[6 * (i * dRow + j) + 3] = i * dRow + j;
+            ptr[6 * (i * dRow + j) + 4] = (i + 1) * dRow;
+            ptr[6 * (i * dRow + j) + 5] = (i + 1) * dRow + j + 1;
           }
         }
 
