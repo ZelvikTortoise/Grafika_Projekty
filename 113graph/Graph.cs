@@ -249,7 +249,7 @@ namespace _113graph
             // Actually:
             // [R G B] x y z
 
-            // Vertex[i]
+            // Vertex[dRow * i + j]
             *ptr++ = r;
             *ptr++ = g;
             *ptr++ = b;
@@ -669,8 +669,8 @@ namespace _113graph
         // !!!{{ CHANGE THIS PART if you want to add axes, legend, etc...
 
         // Triangle part of the scene.
-        // Draw total 'vertices' vertices from the beginning of the index-buffer,
-        // that gives us 'vertices/3' triangles.
+        // Draw total 'numberOfTriangleIndeces' vertices from the beginning of the index-buffer,
+        // that gives us 'numberOfTriangleIndeces / 3' triangles.
         GL.DrawElements(PrimitiveType.Triangles, numberOfTriangleIndeces, DrawElementsType.UnsignedInt, IntPtr.Zero);
         GlInfo.LogError("draw-elements-shader");
 
