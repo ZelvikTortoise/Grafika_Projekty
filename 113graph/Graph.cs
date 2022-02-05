@@ -335,7 +335,7 @@ namespace _113graph
 
             // Triangle[2 * (i * dRow + j) + 1]
             ptr[6 * (i * (dRow - 1) + j) + 3] = i * dRow + j;
-            ptr[6 * (i * (dRow - 1) + j) + 4] = (i + 1) * dRow;
+            ptr[6 * (i * (dRow - 1) + j) + 4] = (i + 1) * dRow + j;
             ptr[6 * (i * (dRow - 1) + j) + 5] = (i + 1) * dRow + j + 1;
           }
         }
