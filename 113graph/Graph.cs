@@ -222,7 +222,7 @@ namespace _113graph
           // Example of regular expression evaluation
           // (no need to use try-catch block here)
           e.Parameters["x"] = x;
-          e.Parameters["y"] = z;
+          // e.Parameters["y"] = z;
           e.Parameters["z"] = z;
           result = (double)e.Evaluate();
           if (double.IsNaN(result) ||       // e.g. 0/0 or asin(1.1)
@@ -322,8 +322,6 @@ namespace _113graph
       videoMemoryPtr = GL.MapBuffer(BufferTarget.ElementArrayBuffer, BufferAccess.WriteOnly);
       unsafe
       {
-        // !!! TODO: only two triangles are defined here, you have to change it!
-
         uint* ptr = (uint*)videoMemoryPtr.ToPointer();
 
         for (uint i = 0; i < maxVertexIndexZ; i++)
