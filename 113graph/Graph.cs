@@ -215,9 +215,9 @@ namespace _113graph
       IntPtr videoMemoryPtr = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
 
       // The calculation of vertices:
-      for (int i = 0; i <= maxVertexIndexZ; i++)
+      for (uint i = 0; i <= maxVertexIndexZ; i++)
       {
-        for (int j = 0; j <= maxVertexIndexX; j++)
+        for (uint j = 0; j <= maxVertexIndexX; j++)
         {
           // Example of regular expression evaluation
           // (no need to use try-catch block here)
@@ -238,6 +238,7 @@ namespace _113graph
           unsafe
           {
             float* ptr = (float*)videoMemoryPtr.ToPointer();
+            uint index = 6 * (dRow * i + j);
 
             r = 0.1f;
             g = 0.9f;
@@ -250,12 +251,22 @@ namespace _113graph
             // [R G B] x y z
 
             // Vertex[dRow * i + j]
+            ptr[index] = r;
+            ptr[index + 1] = g;
+            ptr[index + 2] = b;
+            ptr[index + 3] = v.X;
+            ptr[index + 4] = v.Y;
+            ptr[index + 5] = v.Z;
+
+            // Old:
+            /*/
             *ptr++ = r;
             *ptr++ = g;
             *ptr++ = b;
             *ptr++ = v.X;
             *ptr++ = v.Y;
             *ptr++ = v.Z;
+            /*/
 
             /*/
             // Vertex[0]
