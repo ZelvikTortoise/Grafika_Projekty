@@ -19,8 +19,8 @@ namespace _113graph
     /// </summary>
     public static void InitParams (out string param, out string tooltip, out string expr, out string name, out MouseButtons trackballButton)
     {
-      param           = "domain=[-1.0;1.0;-1.0;1.0]";
-      tooltip         = "domain=[x_min,x_max,y_min,y_max]";
+      param           = "domain=[-1.0;1.0;-1.0;1.0],grid=[50;50]";
+      tooltip         = "domain=[x_min,x_max,y_min,y_max],grid=[x_segments, z_segments]";
       expr            = "1.0";
       trackballButton = MouseButtons.Left;
 
@@ -192,23 +192,23 @@ namespace _113graph
     /// <returns>null if OK, error message otherwise.</returns>
     public string RegenerateGraph (string par, string expr)
     {
-      // !!!{{ TODO: add graph data regeneration code here
-
       if (expr == expression &&
           par == param)
         return null;                // nothing has changed => nothing to do..
 
       double xMin = -1.0, xMax = 1.0, zMin = -1.0, zMax = 1.0;
+      uint xSegments = 50, zSegments = 50;
 
       //------------------------------------------------------------------
       // Input text params (form).
 
-      Dictionary<string, string> p = Util.ParseKeyValueList(param);
+      Dictionary<string, string> p = Util.ParseKeyValueList(par);
 
       // System (rendering) params.
       Form1.form.UpdateRenderingParams(p);
 
-      // My params.
+
+      // My params:
 
       // domain: [xMin;xMax;yMin;yMax]
       List<double> dom = null;
@@ -222,17 +222,25 @@ namespace _113graph
         zMax = Math.Max(zMin + 1.0e-6, dom[3]);
       }
 
-      // !!! TODO: triangle mesh size (triangle number along X-axis & along Z-axis)
+      // grid: [xSquares;zSquares]
+      List<int> grid = null;
+      if (Util.TryParse(p, "grid", ref grid, ';') &&
+         grid != null &&
+         grid.Count >= 2)
+      {
+        xSegments = (uint)grid[0];
+        zSegments = (uint)grid[1];
+      }
 
       //------------------------------------------------------------------
 
-      // Domain = grid 50 times 50 of rectangles:
+      // Domain = grid xSquares times zSquares of rectangles:
       double x = xMin;
-      double dx = (xMax - xMin) / 50;
+      double dx = (xMax - xMin) / xSegments;
       double z = zMin;
-      double dz = (zMax - zMin) / 50;
-      uint maxVertexIndexX = 50;
-      uint maxVertexIndexZ = 50;
+      double dz = (zMax - zMin) / zSegments;
+      uint maxVertexIndexX = xSegments;
+      uint maxVertexIndexZ = zSegments;
       uint numberOfVertices = (maxVertexIndexX + 1) * (maxVertexIndexZ + 1);
       numberOfTriangleIndeces = (int)(6 * maxVertexIndexX * maxVertexIndexZ); // pilot ... indices
       uint dRow = maxVertexIndexX + 1;
