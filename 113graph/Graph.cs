@@ -108,6 +108,82 @@ namespace _113graph
       RegenerateGraph(par, expr);
     }
 
+    public void SetVertexColor(float value, bool NaN, bool infinity, out float R, out float G, out float B)
+    {
+      if (NaN)
+      {
+        R = 0f;
+        G = 0f;
+        B = 0f;
+      }
+      else if (infinity)
+      {
+        R = 1.0f;
+        G = 1.0f;
+        B = 1.0f;
+      }
+      else if (value < -5.0)
+      {
+        R = 0.49f;
+        G = 0f;
+        B = 1.0f;
+      }
+      else if (value < -3.0)
+      {
+        R = 0f;
+        G = 0f;
+        B = 1.0f;
+      }
+      else if (value < -1.0)
+      {
+        R = 0f;
+        G = 0.49f;
+        B = 1.0f;
+      }
+      else if (value < 0)
+      {
+        R = 0f;
+        G = 1.0f;
+        B = 1.0f;
+      }
+      else if (value < 1.0)
+      {
+        R = 0f;
+        G = 1.0f;
+        B = 0.49f;
+      }
+      else if (value < 3.0)
+      {
+        R = 0f;
+        G = 1.0f;
+        B = 0f;
+      }
+      else if (value < 5.0)
+      {
+        R = 0.49f;
+        G = 1.0f;
+        B = 0f;
+      }
+      else if (value < 8.0)
+      {
+        R = 1.0f;
+        G = 1.0f;
+        B = 0f;
+      }
+      else if (value < 10.0)
+      {
+        R = 1.0f;
+        G = 0.49f;
+        B = 0f;
+      }
+      else
+      {
+        R = 1.0f;
+        G = 0f;
+        B = 0f;
+      }
+    }
+
     /// <summary>
     /// Recompute the graph, prepare VBO content and upload it to the GPU...
     /// </summary>
@@ -149,7 +225,6 @@ namespace _113graph
       // !!! TODO: triangle mesh size (triangle number along X-axis & along Z-axis)
 
       //------------------------------------------------------------------
-      // Expression evaluation  - THIS HAS TO BE CHANGED!
 
       // Domain = grid 50 times 50 of rectangles:
       double x = xMin;
@@ -213,6 +288,8 @@ namespace _113graph
       }
 
       IntPtr videoMemoryPtr = GL.MapBuffer(BufferTarget.ArrayBuffer, BufferAccess.WriteOnly);
+      bool nan = false;
+      bool infinity = false;
 
       // The calculation of vertices:
       for (uint i = 0; i <= maxVertexIndexZ; i++)
@@ -223,11 +300,33 @@ namespace _113graph
           // (no need to use try-catch block here)
           e.Parameters["x"] = x;
           // e.Parameters["y"] = z;
-          e.Parameters["z"] = z;
+          e.Parameters["z"] = z;          
+          
+          if (Math.Abs(x) < 10e-15)
+          {
+            x = 0;
+          }
+          if (Math.Abs(z) < 10e-15)
+          {
+            z = 0;
+          }
+
           result = (double)e.Evaluate();
-          if (double.IsNaN(result) ||       // e.g. 0/0 or asin(1.1)
-              double.IsInfinity(result))    // e.g. 1/0
+
+          nan = false;
+          infinity = false;
+
+          if (double.IsNaN(result)) // e.g. 0/0 or asin(1.1)
+          {
+            nan = true;           
+            result = 0.0; 
+          }
+          else if(double.IsInfinity(result) || Math.Abs(result) > 10e10)  // e.g. 1/0
+          {
+            infinity = true;
             result = 0.0;
+          }
+
 
           // Everything seems to be OK.
           expression = expr;
@@ -240,9 +339,7 @@ namespace _113graph
             float* ptr = (float*)videoMemoryPtr.ToPointer();
             uint index = 6 * (dRow * i + j);
 
-            r = 0.1f;
-            g = 0.9f;
-            b = 0.7f;
+            SetVertexColor(v.Y, nan, infinity, out r, out g, out b);
 
             // Possibly:
             // [s t] [R G B] [N_x N_y N_z] x y z
