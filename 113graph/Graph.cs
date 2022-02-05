@@ -321,7 +321,7 @@ namespace _113graph
             nan = true;           
             result = 0.0; 
           }
-          else if(double.IsInfinity(result) || Math.Abs(result) > 10e10)  // e.g. 1/0
+          else if(double.IsInfinity(result) || Math.Abs(result) > 10e16)  // e.g. 1/0
           {
             infinity = true;
             result = 0.0;
