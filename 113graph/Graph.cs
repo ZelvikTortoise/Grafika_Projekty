@@ -19,9 +19,9 @@ namespace _113graph
     /// </summary>
     public static void InitParams (out string param, out string tooltip, out string expr, out string name, out MouseButtons trackballButton)
     {
-      param           = "domain=[-1.0;1.0;-1.0;1.0],grid=[50;50]";
+      param           = "domain=[-5.0;5.0;-3.0;3.0],grid=[50;50]";
       tooltip         = "domain=[x_min,x_max,y_min,y_max],grid=[x_segments, z_segments]";
-      expr            = "1.0";
+      expr            = "2.0*x-1.0*z*z+5.0";
       trackballButton = MouseButtons.Left;
 
       name            = "Lukáš Macek";
@@ -196,7 +196,7 @@ namespace _113graph
           par == param)
         return null;                // nothing has changed => nothing to do..
 
-      double xMin = -1.0, xMax = 1.0, zMin = -1.0, zMax = 1.0;
+      double xMin = -5.0, xMax = 5.0, zMin = -3.0, zMax = 3.0;
       uint xSegments = 50, zSegments = 50;
 
       //------------------------------------------------------------------
@@ -210,7 +210,7 @@ namespace _113graph
 
       // My params:
 
-      // domain: [xMin;xMax;yMin;yMax]
+      // domain: [xMin;xMax;zMin;zMax]
       List<double> dom = null;
       if (Util.TryParse(p, "domain", ref dom, ';') &&
           dom != null &&
@@ -222,7 +222,7 @@ namespace _113graph
         zMax = Math.Max(zMin + 1.0e-6, dom[3]);
       }
 
-      // grid: [xSquares;zSquares]
+      // grid: [xSegments;zSegments]
       List<int> grid = null;
       if (Util.TryParse(p, "grid", ref grid, ';') &&
          grid != null &&
@@ -233,8 +233,8 @@ namespace _113graph
       }
 
       //------------------------------------------------------------------
+      // Domain = grid xSegments times zSegments of rectangles:
 
-      // Domain = grid xSquares times zSquares of rectangles:
       double x = xMin;
       double dx = (xMax - xMin) / xSegments;
       double z = zMin;
@@ -270,8 +270,7 @@ namespace _113graph
       //------------------------------------------------------------------
       // Data for VBO.
 
-      // This has to be in sync with the actual buffer filling loop (see the unsafe
-      // block below)!
+      // This has to be in sync with the actual buffer filling loop (see the unsafe block below)!
       haveTexture = false;
       haveColors = true;
       haveNormals = false;
@@ -304,10 +303,9 @@ namespace _113graph
       {
         for (uint j = 0; j <= maxVertexIndexX; j++)
         {
-          // Example of regular expression evaluation
-          // (no need to use try-catch block here)
+          // Example of regular expression evaluation (no need to use try-catch block here)
           e.Parameters["x"] = x;
-          // e.Parameters["y"] = z;
+          e.Parameters["y"] = z;
           e.Parameters["z"] = z;          
           
           if (Math.Abs(x) < 10e-15)
@@ -349,10 +347,10 @@ namespace _113graph
 
             SetVertexColor(v.Y, nan, infinity, out r, out g, out b);
 
-            // Possibly:
+            // Possible options:
             // [s t] [R G B] [N_x N_y N_z] x y z
 
-            // Actually:
+            // Currently using:
             // [R G B] x y z
 
             // Vertex[dRow * i + j]
@@ -362,50 +360,6 @@ namespace _113graph
             ptr[index + 3] = v.X;
             ptr[index + 4] = v.Y;
             ptr[index + 5] = v.Z;
-
-            // Old:
-            /*/
-            *ptr++ = r;
-            *ptr++ = g;
-            *ptr++ = b;
-            *ptr++ = v.X;
-            *ptr++ = v.Y;
-            *ptr++ = v.Z;
-            /*/
-
-            /*/
-            // Vertex[0]
-            *ptr++ = r;
-            *ptr++ = g;
-            *ptr++ = b;
-            *ptr++ = v.X;
-            *ptr++ = v.Y - 0.2f;
-            *ptr++ = v.Z;
-
-            // Vertex[1]
-            *ptr++ = r;
-            *ptr++ = g;
-            *ptr++ = b - 0.6f;
-            *ptr++ = v.X + 1.0f;
-            *ptr++ = v.Y;
-            *ptr++ = v.Z;
-
-            // Vertex[2]
-            *ptr++ = r;
-            *ptr++ = g;
-            *ptr++ = b;
-            *ptr++ = v.X;
-            *ptr++ = v.Y;
-            *ptr++ = v.Z + 1.0f;
-
-            // Vertex[3]
-            *ptr++ = r + 0.8f;
-            *ptr++ = g - 0.8f;
-            *ptr++ = b;
-            *ptr++ = v.X + 1.0f;
-            *ptr++ = v.Y - 0.2f;
-            *ptr++ = v.Z + 1.0f;
-            /*/
           }
           x += dx;
         }
@@ -444,18 +398,6 @@ namespace _113graph
             ptr[6 * (i * (dRow - 1) + j) + 5] = (i + 1) * dRow + j + 1;
           }
         }
-
-        /*/
-        // Triangle[0]: [0, 1, 2]
-        ptr[0] = 0;
-        ptr[1] = 1;
-        ptr[2] = 2;
-
-        // Triangle[1]: [2, 1, 3]
-        ptr[3] = 2;
-        ptr[4] = 1;
-        ptr[5] = 3;
-        /*/
       }
       GL.UnmapBuffer(BufferTarget.ElementArrayBuffer);
       GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
