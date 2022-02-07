@@ -726,7 +726,7 @@ namespace _087fireworks
       useNormals      = false;
       usePtSize       = true;
 
-      name = "Josef Pelikán";
+      name = "Lukáš Macek";
     }
 
     /// <summary>
@@ -1353,6 +1353,7 @@ namespace _087fireworks
         }
       }
 
+      /*/
       // default: draw trivial cube..
 
       GL.Begin(PrimitiveType.Quads);
@@ -1396,6 +1397,7 @@ namespace _087fireworks
       GL.End();
 
       primitiveCounter += 12;
+      /*/
     }
   }
 }
