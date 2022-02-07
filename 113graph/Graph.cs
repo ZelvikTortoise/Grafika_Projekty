@@ -234,7 +234,6 @@ namespace _113graph
 
       //------------------------------------------------------------------
       // Domain = grid xSegments times zSegments of rectangles:
-
       double x = xMin;
       double dx = (xMax - xMin) / xSegments;
       double z = zMin;
@@ -246,9 +245,16 @@ namespace _113graph
       uint dRow = maxVertexIndexX + 1;
       float r, g, b;
       double nx, ny, nz;
+      double x1, y1, z1, x2, y2, z2;
+      const double epsilon = 10e-16;
+      const int seed = 0;
+      Random random = seed == 0 ? new Random() : new Random(seed);
+      int sign = 1;
+      double dnx, dnz;
+      double nNorm;
 
       Expression e = null;
-      double result;
+      double y;
 
       Vector3 v = new Vector3();
       Vector3 n = new Vector3();
@@ -261,7 +267,7 @@ namespace _113graph
         e.Parameters["x"] = 0.0;
         e.Parameters["y"] = 0.0;
         e.Parameters["z"] = 0.0;
-        result = (double)e.Evaluate();
+        y = (double)e.Evaluate();
       }
       catch (Exception ex)
       {
@@ -319,20 +325,21 @@ namespace _113graph
             z = 0;
           }
 
-          result = (double)e.Evaluate();
+          y = (double)e.Evaluate();
 
+          // Resetting extra information so it can be saved
           nan = false;
           infinity = false;
 
-          if (double.IsNaN(result)) // e.g. 0/0 or asin(1.1)
+          if (double.IsNaN(y)) // e.g. 0/0 or asin(1.1)
           {
             nan = true;           
-            result = 0.0; 
+            y = 0.0; 
           }
-          else if(double.IsInfinity(result) || Math.Abs(result) > 10e16)  // e.g. 1/0
+          else if(double.IsInfinity(y) || Math.Abs(y) > 10e16)  // e.g. 1/0
           {
             infinity = true;
-            result = 0.0;
+            y = 0.0;
           }
 
           // Approximate normal vectors:
@@ -341,23 +348,70 @@ namespace _113graph
           nz = 0.0;
 
 
-          if (Math.Abs(result) >= 10e-16)  // result != 0.0
+          if (Math.Abs(y) >= 10e-16)  // result != 0.0
           {
-            
+            // Generating the second point:
+            dnx = random.Next(1000, int.MaxValue) * epsilon;
+            sign = random.Next(0, 2) == 0 ? -sign : sign;
+            x1 = x + sign * dnx;
+            z1 = z;
+            e.Parameters["x"] = x1;
+            e.Parameters["y"] = z1;
+            e.Parameters["z"] = z1;
+            y1 = (double)e.Evaluate();
+
+            // Calculating the first vector:
+            x1 = x1 - x;
+            y1 = y1 - y;
+            z1 = z1 - z;
+
+            // Generating the third point:
+            dnz = random.Next(1000, int.MaxValue) * epsilon;
+            sign = random.Next(0, 2) == 0 ? -sign : sign;
+            x2 = x;
+            z2 = z + sign * dnz;
+            e.Parameters["x"] = x2;
+            e.Parameters["y"] = z2;
+            e.Parameters["z"] = z2;
+            y2 = (double)e.Evaluate();
+
+            // Calculating the second vector:
+            x2 = x2 - x;
+            y2 = y2 - y;
+            z2 = z2 - z;
+
+            // Calculating the normal vector using cross product:
+            nx = y1 * z2 - z1 * y2;
+            ny = z1 * x2 - x1 * z2;
+            nz = x1 * y2 - y1 * x1;
+
+            // Selecting the correct cross product (direction: +y).
+            if (sign == 1)
+            {
+              nx = -nx;
+              ny = -ny;
+              nz = -nz;
+            }
+
+            // Normalization:
+            nNorm = Math.Sqrt(nx * nx + ny * ny + nz * nz);
+            nx = nx / nNorm;
+            ny = ny / nNorm;
+            nz = nz / nNorm;
           }
 
           // Everything seems to be OK.
           expression = expr;
           param = par;
 
-          v = new Vector3((float)x, (float)result, (float)z);
+          v = new Vector3((float)x, (float)y, (float)z);
           n = new Vector3((float)nx, (float)ny, (float)nz);
           
 
           unsafe
           {
             float* ptr = (float*)videoMemoryPtr.ToPointer();
-            uint index = 6 * (dRow * i + j);
+            uint index = 9 * (dRow * i + j);
 
             SetVertexColor(v.Y, nan, infinity, out r, out g, out b);
 
