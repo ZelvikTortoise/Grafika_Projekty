@@ -249,7 +249,6 @@ namespace _113graph
       const double epsilon = 10e-16;
       const int seed = 0;
       Random random = seed == 0 ? new Random() : new Random(seed);
-      int sign = 1;
       double dnx, dnz;
       double nNorm;
 
@@ -351,9 +350,8 @@ namespace _113graph
           if (Math.Abs(y) >= 10e-16)  // result != 0.0
           {
             // Generating the second point:
-            dnx = random.Next(1000, int.MaxValue) * epsilon;
-            sign = random.Next(0, 2) == 0 ? -sign : sign;
-            x1 = x + sign * dnx;
+            dnx = random.Next(1000, 10000) * epsilon;
+            x1 = x + dnx;
             z1 = z;
             e.Parameters["x"] = x1;
             e.Parameters["y"] = z1;
@@ -367,9 +365,8 @@ namespace _113graph
 
             // Generating the third point:
             dnz = random.Next(1000, int.MaxValue) * epsilon;
-            sign = random.Next(0, 2) == 0 ? -sign : sign;
             x2 = x;
-            z2 = z + sign * dnz;
+            z2 = z + dnz;
             e.Parameters["x"] = x2;
             e.Parameters["y"] = z2;
             e.Parameters["z"] = z2;
@@ -381,17 +378,10 @@ namespace _113graph
             z2 = z2 - z;
 
             // Calculating the normal vector using cross product:
-            nx = y1 * z2 - z1 * y2;
-            ny = z1 * x2 - x1 * z2;
-            nz = x1 * y2 - y1 * x1;
-
-            // Selecting the correct cross product (direction: +y).
-            if (sign == 1)
-            {
-              nx = -nx;
-              ny = -ny;
-              nz = -nz;
-            }
+            nx = z1 * y2 - y1 * z2;
+            ny = x1 * z2 - z1 * x2;
+            nz = y1 * x1 - x1 * y2;
+            // ... selecting the correct cross product (direction: +y).
 
             // Normalization:
             nNorm = Math.Sqrt(nx * nx + ny * ny + nz * nz);
@@ -781,7 +771,7 @@ namespace _113graph
           p += Vector3.SizeInBytes;
 
         if (activeProgram.HasAttribute("normal"))
-          GL.VertexAttribPointer(activeProgram.GetAttribute("normal"), 3, VertexAttribPointerType.Float, false, stride, p);
+          GL.VertexAttribPointer(activeProgram.GetAttribute("normal"), 3, VertexAttribPointerType.Float, true, stride, p);
         if (haveNormals)
           p += Vector3.SizeInBytes;
 
@@ -802,7 +792,7 @@ namespace _113graph
         GlInfo.LogError("draw-elements-shader");
 
         // How to draw lines (e.g. coordinate axes):
-        //GL.DrawElements(PrimitiveType.Lines, lineVertices, DrawElementsType.UnsignedInt, lineOffset);
+        // GL.DrawElements(PrimitiveType.Lines, lineVertices, DrawElementsType.UnsignedInt, lineOffset);
         // lineVertices ... number of vertex indices for lines (e.g. 'lineVertices/2' lines)
         // lineOffset   ... start offset in the index-buffer
 
