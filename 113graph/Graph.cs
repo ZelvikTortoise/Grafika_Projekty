@@ -245,11 +245,13 @@ namespace _113graph
       numberOfTriangleIndeces = (int)(6 * maxVertexIndexX * maxVertexIndexZ); // pilot ... indices
       uint dRow = maxVertexIndexX + 1;
       float r, g, b;
+      double nx, ny, nz;
 
       Expression e = null;
       double result;
 
-      Vector3  v = new Vector3();
+      Vector3 v = new Vector3();
+      Vector3 n = new Vector3();
 
       // Checking expression syntax first (only once).
       try
@@ -273,7 +275,7 @@ namespace _113graph
       // This has to be in sync with the actual buffer filling loop (see the unsafe block below)!
       haveTexture = false;
       haveColors = true;
-      haveNormals = false;
+      haveNormals = true;
 
       stride = Vector3.SizeInBytes;
       if (haveTexture)
@@ -333,12 +335,24 @@ namespace _113graph
             result = 0.0;
           }
 
+          // Approximate normal vectors:
+          nx = 0.0;
+          ny = 0.0;
+          nz = 0.0;
+
+
+          if (Math.Abs(result) >= 10e-16)  // result != 0.0
+          {
+            
+          }
 
           // Everything seems to be OK.
           expression = expr;
           param = par;
 
           v = new Vector3((float)x, (float)result, (float)z);
+          n = new Vector3((float)nx, (float)ny, (float)nz);
+          
 
           unsafe
           {
@@ -351,15 +365,18 @@ namespace _113graph
             // [s t] [R G B] [N_x N_y N_z] x y z
 
             // Currently using:
-            // [R G B] x y z
+            // [R G B] [N_x N_y N_z] x y z
 
             // Vertex[dRow * i + j]
-            ptr[index] = r;
+            ptr[index]     = r;
             ptr[index + 1] = g;
             ptr[index + 2] = b;
-            ptr[index + 3] = v.X;
-            ptr[index + 4] = v.Y;
-            ptr[index + 5] = v.Z;
+            ptr[index + 3] = n.X;
+            ptr[index + 4] = n.Y;
+            ptr[index + 5] = n.Z;
+            ptr[index + 6] = v.X;
+            ptr[index + 7] = v.Y;
+            ptr[index + 8] = v.Z;
           }
           x += dx;
         }
