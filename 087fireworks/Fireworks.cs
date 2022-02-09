@@ -54,15 +54,27 @@ namespace _087fireworks
     static RandomJames rnd = new RandomJames();
 
     /// <summary>
+    /// Available types of launchers.
+    /// </summary>
+    public enum Type { Normal, Main, Background }
+
+    /// <summary>
+    /// Type of a launcher for distinguishing functions.
+    /// </summary>
+    public static Type type;
+
+    /// <summary>
     /// Simulate object to the given time.
     /// </summary>
     /// <param name="time">Required target time.</param>
     /// <param name="fw">Simulation context.</param>
     /// <returns>False in case of expiry.</returns>
-    public bool Simulate (double time, Fireworks fw)
+    public bool Simulate(double time, Fireworks fw)
     {
       if (time <= simTime)
         return true;
+
+      // TODO launchers:
 
       double dt = time - simTime;
       // generate new particles for the [simTime-time] interval:
@@ -73,7 +85,7 @@ namespace _087fireworks
       {
         // emit a new particle:
         Vector3d dir = Geometry.RandomDirectionNormal(rnd, aim, fw.variance);         // random direction around 'aim'
-        Particle p = new Particle(position, dir * rnd.RandomDouble(0.2, 0.8), up,
+        Particle p = new Particle(position, dir * rnd.RandomDouble(0.2, 0.8), Particle.Type.Background, up,
                                   new Vector3(rnd.RandomFloat(0.1f, 1.0f), rnd.RandomFloat(0.1f, 1.0f), rnd.RandomFloat(0.1f, 1.0f)),
                                   rnd.RandomDouble(0.2, 4.0), time, rnd.RandomDouble(2.0, 12.0));
         fw.AddParticle(p);
@@ -85,7 +97,7 @@ namespace _087fireworks
       return true;
     }
 
-    public Launcher (double freq, Vector3d? pos = null, Vector3d? _aim = null, Vector3d? _up = null)
+    public Launcher (double freq, Type t, Vector3d? pos = null, Vector3d? _aim = null, Vector3d? _up = null)
     {
       position = pos ?? Vector3d.Zero;
       aim = _aim ?? new Vector3d(0.1, 1.0, -0.1);
@@ -94,6 +106,7 @@ namespace _087fireworks
       up.Normalize();
       frequency = freq;      // number of emitted particles per second
       simTime = 0.0;
+      type = t;
     }
 
     // --- rendering ---
@@ -208,6 +221,16 @@ namespace _087fireworks
     public Vector3d velocity;
 
     /// <summary>
+    /// Available types of launchers.
+    /// </summary>
+    public enum Type { Main1, Main2, Main3, Finish, Explosive, Shrapnel, Background }
+
+    /// <summary>
+    /// Type of a launcher for distinguishing functions.
+    /// </summary>
+    public static Type type;
+
+    /// <summary>
     /// Current particle up vector.
     /// </summary>
     public Vector3d up;
@@ -232,7 +255,7 @@ namespace _087fireworks
     /// </summary>
     public double simTime;
 
-    public Particle (Vector3d pos, Vector3d vel, Vector3d _up, Vector3 col, double siz, double time, double age)
+    public Particle (Vector3d pos, Vector3d vel, Type t, Vector3d _up, Vector3 col, double siz, double time, double age)
     {
       position = pos;
       velocity = vel;
@@ -241,6 +264,7 @@ namespace _087fireworks
       size = siz;
       simTime = time;
       maxAge = time + age;
+      type = t;
     }
 
     /// <summary>
@@ -249,13 +273,15 @@ namespace _087fireworks
     /// <param name="time">Required target time.</param>
     /// <param name="fw">Simulation context.</param>
     /// <returns>False in case of expiry.</returns>
-    public bool Simulate (double time, Fireworks fw)
+    public bool Simulate(double time, Fireworks fw)
     {
       if (time <= simTime)
         return true;
 
       if (time > maxAge)
         return false;
+
+      // TODO particles
 
       // fly the particle:
       double dt = time - simTime;
@@ -456,9 +482,9 @@ namespace _087fireworks
       particles.Clear();
       launchers.Clear();
 
-      Launcher l = new Launcher(freq, new Vector3d(-0.5, 0.0, 0.0), null, new Vector3d(-0.5, 0.0, -0.5));
+      Launcher l = new Launcher(freq, Launcher.Type.Normal, new Vector3d(-0.5, 0.0, 0.0), null, new Vector3d(-0.5, 0.0, -0.5));
       AddLauncher(l);
-      l = new Launcher(freq, new Vector3d(0.5, 0.0, 0.0));
+      l = new Launcher(freq, Launcher.Type.Normal, new Vector3d(0.5, 0.0, 0.0));
       AddLauncher(l);
 
       Frames = 0;
@@ -560,10 +586,11 @@ namespace _087fireworks
       int i;
       bool oddFrame = (Frames & 1) > 0;
 
-      // TODO:
+      // TODO simulation:
       // Simulate()
       // Dědičnost, různé typy launcherů, částic
       // Vystřelování, ...
+      // Trails
 
       // simulate launchers:
       if (oddFrame)
@@ -1089,7 +1116,7 @@ namespace _087fireworks
     /// <summary>
     /// Simulate one frame.
     /// </summary>
-    private void Simulate ()
+    private void Simulate()
     {
       if (fw != null)
         lock (fw)
