@@ -74,22 +74,42 @@ namespace _087fireworks
       if (time <= simTime)
         return true;
 
+      Vector3d dir;
+      Particle p;
+
       // TODO launchers:
-
-      double dt = time - simTime;
-      // generate new particles for the [simTime-time] interval:
-
-      double probability = dt * frequency;
-      while (probability > 1.0 ||
-             rnd.UniformNumber() < probability)
+      switch (type)
       {
-        // emit a new particle:
-        Vector3d dir = Geometry.RandomDirectionNormal(rnd, aim, fw.variance);         // random direction around 'aim'
-        Particle p = new Particle(position, dir * rnd.RandomDouble(0.2, 0.8), Particle.Type.Background, up,
+        case Type.Normal:
+
+          break;
+        case Type.Background:
+          double dt = time - simTime;
+          // generate new particles for the [simTime-time] interval:
+
+          double probability = dt * frequency;
+          while (probability > 1.0 ||
+                 rnd.UniformNumber() < probability)
+          {
+            // emit a new particle:
+            dir = Geometry.RandomDirectionNormal(rnd, aim, fw.variance);         // random direction around 'aim'
+            p = new Particle(position, dir * rnd.RandomDouble(0.2, 0.8), Particle.Type.Shrapnel, up,
                                   new Vector3(rnd.RandomFloat(0.1f, 1.0f), rnd.RandomFloat(0.1f, 1.0f), rnd.RandomFloat(0.1f, 1.0f)),
                                   rnd.RandomDouble(0.2, 4.0), time, rnd.RandomDouble(2.0, 12.0));
-        fw.AddParticle(p);
-        probability -= 1.0;
+            fw.AddParticle(p);
+            probability -= 1.0;
+          }
+          break;
+        case Type.Main:
+          dir = (-this.position + new Vector3d(0.0, 8.0, 0.0)) / 4.0;
+          p = new Particle(position, dir, Particle.Type.Main1, up,
+                                  new Vector3(1.0f, 0.25f, 0.0f), // Color
+                                  6.0, time, 2.0);
+          fw.AddParticle(p);
+          // TODO: Add trail.
+          break;
+        default:
+          throw new Exception(string.Format("Unknown launcher type in {0} function of {1} class.", nameof(Simulate), nameof(Launcher)));
       }
 
       simTime = time;
@@ -223,7 +243,7 @@ namespace _087fireworks
     /// <summary>
     /// Available types of launchers.
     /// </summary>
-    public enum Type { Main1, Main2, Main3, Finish, Explosive, Shrapnel, Background }
+    public enum Type { Main1, Main2, Main3, Finish, Explosive, Shrapnel }
 
     /// <summary>
     /// Type of a launcher for distinguishing functions.
@@ -395,6 +415,11 @@ namespace _087fireworks
     /// </summary>
     public int MaxLaunchers => 20;
 
+    /// <summary>
+    /// Is this the first launch of particles in the simulation?
+    /// </summary>
+    public bool firstLaunch = true;
+
     public Particle GetParticle (int i)
     {
       if (i < particles.Count)
@@ -473,7 +498,7 @@ namespace _087fireworks
     /// [Re-]initialize the simulation system.
     /// </summary>
     /// <param name="param">User-provided parameter string.</param>
-    public void Reset (string param)
+    public void Reset(string param)
     {
       // input params:
       Update(param);
@@ -482,13 +507,20 @@ namespace _087fireworks
       particles.Clear();
       launchers.Clear();
 
-      Launcher l = new Launcher(freq, Launcher.Type.Normal, new Vector3d(-0.5, 0.0, 0.0), null, new Vector3d(-0.5, 0.0, -0.5));
+      // TODO spawn launchers:
+
+      Launcher l;
+
+      l = new Launcher(freq, Launcher.Type.Main, new Vector3d(-4.0, 0.0, 2.3), null, new Vector3d(-0.5, 0.0, -0.5));
       AddLauncher(l);
-      l = new Launcher(freq, Launcher.Type.Normal, new Vector3d(0.5, 0.0, 0.0));
+      l = new Launcher(freq, Launcher.Type.Main, new Vector3d(4, 0.0, 2.3));
+      AddLauncher(l);
+      l = new Launcher(freq, Launcher.Type.Main, new Vector3d(0.0, 0.0, -4.6));
       AddLauncher(l);
 
       Frames = 0;
       Time = 0.0f;
+      firstLaunch = true;
       Running = true;
     }
 
@@ -559,7 +591,7 @@ namespace _087fireworks
       if (launchers.Count < MaxLaunchers)
         launchers.Add(la);
     }
-
+    
     public void AddParticle (Particle p)
     {
       if (particles.Count + newParticles.Count - expiredParticles.Count < maxParticles)
@@ -592,12 +624,21 @@ namespace _087fireworks
       // Vystřelování, ...
       // Trails
 
+      if (firstLaunch)
+      {
+        // Simulating main launchers ... triangle of fireworks:
+        firstLaunch = false;
+        launchers[0].Simulate(time, this);
+        launchers[1].Simulate(time, this);
+        launchers[2].Simulate(time, this);
+      }
+
       // simulate launchers:
       if (oddFrame)
-        for (i = 0; i < launchers.Count; i++)
+        for (i = 3; i < launchers.Count; i++)
           launchers[i].Simulate(time, this);
       else
-        for (i = launchers.Count; --i >= 0;)
+        for (i = launchers.Count; --i >= 3;)
           launchers[i].Simulate(time, this);
 
       // simulate particles:
