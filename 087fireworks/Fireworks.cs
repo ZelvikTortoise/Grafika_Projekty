@@ -560,6 +560,11 @@ namespace _087fireworks
       int i;
       bool oddFrame = (Frames & 1) > 0;
 
+      // TODO:
+      // Simulate()
+      // Dědičnost, různé typy launcherů, částic
+      // Vystřelování, ...
+
       // simulate launchers:
       if (oddFrame)
         for (i = 0; i < launchers.Count; i++)
