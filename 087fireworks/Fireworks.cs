@@ -61,7 +61,7 @@ namespace _087fireworks
     /// <summary>
     /// Type of a launcher for distinguishing functions.
     /// </summary>
-    public static Type type;
+    public Type type;
 
     /// <summary>
     /// Simulate object to the given time.
@@ -248,7 +248,7 @@ namespace _087fireworks
     /// <summary>
     /// Type of a launcher for distinguishing functions.
     /// </summary>
-    public static Type type;
+    public Type type;
 
     /// <summary>
     /// Current particle up vector.
@@ -296,14 +296,31 @@ namespace _087fireworks
     public bool Simulate(double time, Fireworks fw)
     {
       if (time <= simTime)
+      {
+        // Nothing should change.
         return true;
-
-      if (time > maxAge)
-        return false;
+      }
 
       // TODO particles
 
-      // fly the particle:
+      if (time > maxAge)
+      {
+        // Particle dies.
+        Vector3d dir;
+        Particle p;
+        if (type == Type.Main1)
+        {
+          dir = fw.Rotate3DVector(velocity, 0.5235987756, Fireworks.Axes.y);
+          p = new Particle(position, new Vector3d(dir.X, 0.0f, dir.Z), Particle.Type.Main2, up,
+                                  new Vector3(0.81f, 0.98f, 0.02f),
+                                  6.0, time, 2.0);
+          fw.AddParticle(p);
+        }
+
+        return false;
+      }
+      
+      // Particle moves:
       double dt = time - simTime;
       position += dt * velocity;
 
@@ -314,6 +331,8 @@ namespace _087fireworks
         size *= extinction;
         color *= (float)extinction;
       }
+
+
 
       simTime = time;
 
@@ -419,6 +438,50 @@ namespace _087fireworks
     /// Is this the first launch of particles in the simulation?
     /// </summary>
     public bool firstLaunch = true;
+
+    /// <summary>
+    /// Possible rotation axes. Axis y is 'up'.
+    /// </summary>
+    public enum Axes { x, y, z }
+
+    /// <summary>
+    /// Rotates a vector with coordinates (x, y) using the angle in radians.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="angle"></param>
+    private void Rotate2DVector(ref double x, ref double y, double angle)
+    {
+      double newX = Math.Cos(angle) * x - Math.Sin(angle) * y;
+      double newY = Math.Sin(angle) * x + Math.Cos(angle) * y;
+
+      x = newX;
+      y = newY;
+    }
+
+    public Vector3d Rotate3DVector(Vector3d oldVector, double angle, Axes axis)
+    {
+      double x = oldVector.X;
+      double y = oldVector.Y;
+      double z = oldVector.Z;
+
+      switch (axis)
+      {
+        case Axes.x:
+          Rotate2DVector(ref y, ref z, angle);
+          break;
+        case Axes.y:
+          Rotate2DVector(ref x, ref z, angle);
+          break;
+        case Axes.z:
+          Rotate2DVector(ref x, ref y, angle);
+          break;
+        default:
+          throw new Exception("Uknown rotation axis in " + nameof(Rotate3DVector) + " function in the " + nameof(Fireworks) + " class.");
+      }
+
+      return new Vector3d(x, y, z);
+    }
 
     public Particle GetParticle (int i)
     {
