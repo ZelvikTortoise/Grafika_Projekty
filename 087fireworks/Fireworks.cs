@@ -59,6 +59,11 @@ namespace _087fireworks
     public Type type;
 
     /// <summary>
+    /// Time when the last rocket was launched from this launcher.
+    /// </summary>
+    public double timeOfLastLaunch;
+
+    /// <summary>
     /// Simulate object to the given time.
     /// </summary>
     /// <param name="time">Required target time.</param>
@@ -78,8 +83,8 @@ namespace _087fireworks
       switch (type)
       {
         case Type.Explosive:
-          dt = time - simTime;
-          probability = 0.0001 * dt * frequency;
+          dt = time - timeOfLastLaunch;
+          probability = 0.000002 * dt * frequency;
           if (probability > 1.0 || Fireworks.rnd.UniformNumber() < probability)
           {
             dir = Geometry.RandomDirectionNormal(Fireworks.rnd, aim, fw.variance);
@@ -89,6 +94,7 @@ namespace _087fireworks
                                     new Vector3(1.0f, 0.5f, 0.0f), // Color
                                     pSize, time, pAge);
             fw.AddParticle(p);
+            timeOfLastLaunch = time;
           }          
           break;
         case Type.Background:
@@ -110,11 +116,16 @@ namespace _087fireworks
           }
           break;
         case Type.Main:
-          dir = (-this.position + new Vector3d(0.0, 8.0, 0.0)) / 4.0;
-          p = new Particle(position, dir, Particle.Type.Main1, up,
-                                  new Vector3(1.0f, 0.25f, 0.0f), // Color
-                                  6.0, time, 2.0);
-          fw.AddParticle(p);
+          dt = time - timeOfLastLaunch;
+          if (time - timeOfLastLaunch > 20.0f * (4000 / frequency))
+          {
+            dir = (-this.position + new Vector3d(0.0, 8.0, 0.0)) / 4.0;
+            p = new Particle(position, dir, Particle.Type.Main1, up,
+                                    new Vector3(1.0f, 0.25f, 0.0f), // Color
+                                    6.0, time, 2.0);
+            fw.AddParticle(p);
+            timeOfLastLaunch = time;
+          }          
           break;
         default:
           throw new Exception(string.Format("Unknown launcher type in {0} function of {1} class.", nameof(Simulate), nameof(Launcher)));
@@ -135,6 +146,14 @@ namespace _087fireworks
       frequency = freq;      // number of emitted particles per second
       simTime = 0.0;
       type = t;
+      if (type == Type.Background)
+      {
+        timeOfLastLaunch = double.NaN; // timeOfLastLaunch is not used regarding launchers of type Type.Background
+      }
+      else
+      {
+        timeOfLastLaunch = double.NegativeInfinity; // we want launchers to launch rockets as soon as the simulation starts
+      }
     }
 
     // --- rendering ---
@@ -333,7 +352,7 @@ namespace _087fireworks
             fw.AddParticle(p);
             break;
           case Type.Main3:
-            Explode(fw, time, position, 500, 1000, 0.1, true, new Vector3[] { new Vector3(1.0f, 0.0f, 0.0f), new Vector3(1.0f, 0.25f, 0.0f), new Vector3(1.0f, 1.0f, 0.0f) });
+            Explode(fw, time, position, 300, 500, 0.1, true, new Vector3[] { new Vector3(1.0f, 0.0f, 0.0f), new Vector3(1.0f, 0.25f, 0.0f), new Vector3(1.0f, 1.0f, 0.0f) });
             break;
           case Type.Explosive:
             Vector3[] colors = GetRandomExplosiveColorSet(fw);            
@@ -558,11 +577,6 @@ namespace _087fireworks
     public int MaxLaunchers => 20;
 
     /// <summary>
-    /// Is this the first launch of particles in the simulation?
-    /// </summary>
-    public bool firstLaunch = true;
-
-    /// <summary>
     /// Possible rotation axes. Axis y is 'up'.
     /// </summary>
     public enum Axes { x, y, z }
@@ -744,7 +758,6 @@ namespace _087fireworks
 
       Frames = 0;
       Time = 0.0f;
-      firstLaunch = true;
       Running = true;
     }
 
@@ -848,16 +861,15 @@ namespace _087fireworks
       // Vystřelování, ...
       // Trails
 
-      if (firstLaunch)
-      {
-        // Simulating main launchers ... triangle of fireworks:
-        firstLaunch = false;
-        launchers[0].Simulate(time, this);
-        launchers[1].Simulate(time, this);
-        launchers[2].Simulate(time, this);
-      }
+      // Simulating the main launchers (forming regular tetrahedron):
+      if (oddFrame)
+        for (i = 0; i < 3; i++)
+          launchers[i].Simulate(time, this);
+      else
+        for (i = 3; --i >= 0;)
+          launchers[i].Simulate(time, this);
 
-      // simulate launchers:
+      // Simulating explosive launchers and background launchers:
       if (oddFrame)
         for (i = 3; i < launchers.Count; i++)
           launchers[i].Simulate(time, this);
@@ -865,7 +877,7 @@ namespace _087fireworks
         for (i = launchers.Count; --i >= 3;)
           launchers[i].Simulate(time, this);
 
-      // simulate particles:
+      // Simulating particles:
       if (oddFrame)
       {
         for (i = 0; i < particles.Count; i++)
@@ -877,12 +889,12 @@ namespace _087fireworks
           if (!particles[i].Simulate(time, this))
             expiredParticles.Add(i);
 
-      // remove expired particles:
+      // Removing expired particles:
       expiredParticles.Sort(ReverseComparer);
       foreach (int j in expiredParticles)
         particles.RemoveAt(j);
 
-      // add new particles:
+      // Adding new particles:
       foreach (var p in newParticles)
         particles.Add(p);
 
