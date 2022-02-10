@@ -345,9 +345,21 @@ namespace _087fireworks
 
         if (type == Type.Main1 || type == Type.Main2 || type == Type.Main3)
         {
-          dir = -0.1 * velocity;
+          dir = new Vector3d(0.0, 0.0, 0.0);
           p = new Particle(position, dir, Particle.Type.Trail, up, 0.4f * color, 0.8 * size, time, 0.25);
           fw.AddParticle(p);
+        }
+        else if (type == Type.Trail)
+        {
+          if (size < 0.6)
+          {
+            return false;
+          }
+          else
+          {
+            size *= 0.95;
+            color *= 0.95f;
+          }          
         }
 
 
@@ -1045,7 +1057,7 @@ namespace _087fireworks
 
       // general OpenGL:
       glControl1.VSync = true;
-      GL.ClearColor(Color.FromArgb(14, 20, 40));    // darker "navy blue"
+      GL.ClearColor(Color.FromArgb(0, 0, 0)); // GL.ClearColor(Color.FromArgb(14, 20, 40));    // darker "navy blue"
       GL.Enable(EnableCap.DepthTest);
       GL.Enable(EnableCap.VertexProgramPointSize);
       GL.ShadeModel(ShadingModel.Flat);
