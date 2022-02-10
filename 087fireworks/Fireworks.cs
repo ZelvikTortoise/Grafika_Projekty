@@ -51,7 +51,7 @@ namespace _087fireworks
     /// <summary>
     /// Available types of launchers.
     /// </summary>
-    public enum Type { Classic, Main, Background }
+    public enum Type { Explosive, Main, Background }
 
     /// <summary>
     /// Type of a launcher for distinguishing functions.
@@ -75,7 +75,7 @@ namespace _087fireworks
       // TODO launchers:
       switch (type)
       {
-        case Type.Classic:
+        case Type.Explosive:
 
           break;
         case Type.Background:
@@ -688,7 +688,18 @@ namespace _087fireworks
       AddLauncher(l);
 
       // Explosive launchers:
-      // TODO ABC
+      l = new Launcher(freq, Launcher.Type.Explosive, new Vector3d(-8.0, 0.0, -1.5));
+      AddLauncher(l);
+      l = new Launcher(freq, Launcher.Type.Explosive, new Vector3d(8.0, 0.0, -1.5));
+      AddLauncher(l);
+      l = new Launcher(freq, Launcher.Type.Explosive, new Vector3d(-5.5, 0.0, -4.5));
+      AddLauncher(l);
+      l = new Launcher(freq, Launcher.Type.Explosive, new Vector3d(5.5, 0.0, -4.5));      
+      AddLauncher(l);
+      l = new Launcher(freq, Launcher.Type.Explosive, new Vector3d(-2.0, 0.0, -6.0));
+      AddLauncher(l);
+      l = new Launcher(freq, Launcher.Type.Explosive, new Vector3d(2.0, 0.0, -6.0));
+      AddLauncher(l);
 
       Frames = 0;
       Time = 0.0f;
