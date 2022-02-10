@@ -71,26 +71,40 @@ namespace _087fireworks
 
       Vector3d dir;
       Particle p;
+      double pSize, pAge;
+      double dt, probability;
 
       // TODO launchers:
       switch (type)
       {
         case Type.Explosive:
-
+          dt = time - simTime;
+          probability = 0.0001 * dt * frequency;
+          if (probability > 1.0 || Fireworks.rnd.UniformNumber() < probability)
+          {
+            dir = Geometry.RandomDirectionNormal(Fireworks.rnd, aim, fw.variance);
+            pSize = Fireworks.rnd.RandomDouble(2.0, 6.0);
+            pAge = Fireworks.rnd.RandomDouble(3.0, 8.0);
+            p = new Particle(position, dir, Particle.Type.Explosive, up,
+                                    new Vector3(1.0f, 0.5f, 0.0f), // Color
+                                    pSize, time, pAge);
+            fw.AddParticle(p);
+          }          
           break;
         case Type.Background:
-          double dt = time - simTime;
-          // generate new particles for the [simTime-time] interval:
+          dt = time - simTime;          
+          probability = dt * frequency;
 
-          double probability = dt * frequency;
-          while (probability > 1.0 ||
-                 Fireworks.rnd.UniformNumber() < probability)
+          // Generates new particles for the [simTime-time] interval:
+          while (probability > 1.0 || Fireworks.rnd.UniformNumber() < probability)
           {
-            // emit a new particle:
-            dir = Geometry.RandomDirectionNormal(Fireworks.rnd, aim, fw.variance);         // random direction around 'aim'
+            // Emit a new particle:
+            dir = Geometry.RandomDirectionNormal(Fireworks.rnd, aim, fw.variance);         // Random direction around 'aim'
+            pSize = Fireworks.rnd.RandomDouble(0.2, 4.0);
+            pAge = Fireworks.rnd.RandomDouble(2.0, 12.0);
             p = new Particle(position, dir * Fireworks.rnd.RandomDouble(0.2, 0.8), Particle.Type.Shrapnel, up,
                                   new Vector3(Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f)),
-                                  Fireworks.rnd.RandomDouble(0.2, 4.0), time, Fireworks.rnd.RandomDouble(2.0, 12.0));
+                                  pSize, time, pAge);
             fw.AddParticle(p);
             probability -= 1.0;
           }
@@ -101,7 +115,6 @@ namespace _087fireworks
                                   new Vector3(1.0f, 0.25f, 0.0f), // Color
                                   6.0, time, 2.0);
           fw.AddParticle(p);
-          // TODO: Add trail.
           break;
         default:
           throw new Exception(string.Format("Unknown launcher type in {0} function of {1} class.", nameof(Simulate), nameof(Launcher)));
@@ -303,26 +316,30 @@ namespace _087fireworks
         // Particle dies.
         Vector3d dir;
         Particle p;
-        if (type == Type.Main1)
+        switch (type)
         {
-          dir = fw.Rotate3DVector(velocity, 0.5235987756, Fireworks.Axes.y);
-          p = new Particle(position, new Vector3d(dir.X, 0.0f, dir.Z), Particle.Type.Main2, up,
-                                  new Vector3(0.47f, 0.75f, 0.13f),
-                                  6.0, time, 2.0);
-          fw.AddParticle(p);
-        }
-        else if (type == Type.Main2)
-        {
-          dir = new Vector3d(-0.5 * position.X, 1.0, -0.5 * position.Z);
-          p = new Particle(position, dir, Particle.Type.Main3, up,
-                                  new Vector3(1.0f, 1.0f, 0.0f),
-                                  6.0, time, 2.0);
-          fw.AddParticle(p);
-        }
-        else if (type == Type.Main3)
-        {
-          Explode(fw, time, position, 500, 1000, 0.1, true, new Vector3[] { new Vector3(1.0f, 0.0f, 0.0f), new Vector3(1.0f, 0.25f, 0.0f), new Vector3(1.0f, 1.0f, 0.0f) });
-        }
+          case Type.Main1:
+            dir = fw.Rotate3DVector(velocity, 0.5235987756, Fireworks.Axes.y);
+            p = new Particle(position, new Vector3d(dir.X, 0.0f, dir.Z), Particle.Type.Main2, up,
+                                    new Vector3(0.47f, 0.75f, 0.13f),
+                                    6.0, time, 2.0);
+            fw.AddParticle(p);
+            break;
+          case Type.Main2:
+            dir = new Vector3d(-0.5 * position.X, 1.0, -0.5 * position.Z);
+            p = new Particle(position, dir, Particle.Type.Main3, up,
+                                    new Vector3(1.0f, 1.0f, 0.0f),
+                                    6.0, time, 2.0);
+            fw.AddParticle(p);
+            break;
+          case Type.Main3:
+            Explode(fw, time, position, 500, 1000, 0.1, true, new Vector3[] { new Vector3(1.0f, 0.0f, 0.0f), new Vector3(1.0f, 0.25f, 0.0f), new Vector3(1.0f, 1.0f, 0.0f) });
+            break;
+          case Type.Explosive:
+            Vector3[] colors = GetRandomExplosiveColorSet(fw);            
+            Explode(fw, time, position, 100, 300, 0.1, false, colors);
+            break;
+        }        
 
         return false;
       }
@@ -371,6 +388,13 @@ namespace _087fireworks
       }      
     }
 
+    public Vector3[] GetRandomExplosiveColorSet(Fireworks fw)
+    {
+      // Choosing a color set:
+      return fw.possibleColorSets[Fireworks.rnd.RandomInteger(0, fw.possibleColorSets.Count - 1)];
+    }
+
+
     /// <summary>
     /// Generates a spherical explosion of particles of randomized colors from the given set.
     /// </summary>
@@ -382,7 +406,7 @@ namespace _087fireworks
     /// <param name="shrapnelSize"></param>
     /// <param name="longer"></param>
     /// <param name="colors"></param>
-    public void Explode (Fireworks fw, double time, Vector3d position, int minShrapnel, int maxShrapnel, double shrapnelSize, bool longer, Vector3[] colors)
+    public void Explode(Fireworks fw, double time, Vector3d position, int minShrapnel, int maxShrapnel, double shrapnelSize, bool longer, Vector3[] colors)
     {
       int shrapnelParticlesCount = Fireworks.rnd.RandomInteger(minShrapnel, maxShrapnel);
       Vector3d dir;
@@ -542,6 +566,23 @@ namespace _087fireworks
     /// Possible rotation axes. Axis y is 'up'.
     /// </summary>
     public enum Axes { x, y, z }
+
+    /// <summary>
+    /// Possible color sets for explosive firework rockets.
+    /// </summary>
+    public readonly List<Vector3[]> possibleColorSets = new List<Vector3[]> {
+        new Vector3[] { new Vector3(0.86f, 0.08f, 0.24f) }, // crimson
+        new Vector3[] { new Vector3(0.5f, 0.0f, 0.0f), new Vector3(0.5f, 0.5f, 0.0f) }, // maroon + olive
+        new Vector3[] { new Vector3(1.0f, 1.0f, 0.0f), new Vector3(0.0f, 1.0f, 0.0f) }, // lime + yellow
+        new Vector3[] { new Vector3(0.0f, 0.0f, 1.0f), new Vector3(0.25f, 0.41f, 0.88f), new Vector3(0.54f, 0.17f, 0.89f) },  // blue + royal blue + blue violet
+        new Vector3[] { new Vector3(0.5f, 0.5f, 0.5f), new Vector3(1.0f, 1.0f, 1.0f), new Vector3(0.5f, 0.0f, 0.5f) }, // gray + white + purple
+        new Vector3[] { new Vector3(0.70f, 0.13f, 0.13f), new Vector3(1.00f, 0.27f, 0.0f), new Vector3(0.98f, 0.50f, 0.45f) }, // firebrick + orange red + salmon
+        new Vector3[] { new Vector3(0.25f, 0.88f, 0.82f), new Vector3(0.23f, 0.70f, 0.44f), new Vector3(0.00f, 0.75f, 1.00f) }, // turquoise + medium sea green + deep sky blue
+        new Vector3[] { new Vector3(0.60f, 0.98f, 0.60f), new Vector3(0.00f, 1.00f, 0.49f), new Vector3(1.00f, 0.08f, 0.58f) },  // pale green + spring green + 	deep pink
+        new Vector3[] { new Vector3(0.69f, 0.77f, 0.87f), new Vector3(0.69f, 0.93f, 0.93f), new Vector3(0.0f, 0.5f, 0.5f) },  // 	light steel blue + pale turquoise + teal
+        new Vector3[] { new Vector3(1.0f, 0.0f, 0.0f), new Vector3(0.65f, 0.16f, 0.16f) }  // red + brown
+        // source: https://www.rapidtables.com/web/color/RGB_Color.html
+      };
 
     /// <summary>
     /// Rotates a vector with coordinates (x, y) using the angle in radians.
