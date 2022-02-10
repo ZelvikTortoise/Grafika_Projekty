@@ -98,22 +98,25 @@ namespace _087fireworks
           }          
           break;
         case Type.Background:
-          dt = time - simTime;          
-          probability = dt * frequency;
-
-          // Generates new particles for the [simTime-time] interval:
-          while (probability > 1.0 || Fireworks.rnd.UniformNumber() < probability)
+          if (fw.backgroundLaunchersOn)
           {
-            // Emit a new particle:
-            dir = Geometry.RandomDirectionNormal(Fireworks.rnd, aim, fw.variance);         // Random direction around 'aim'
-            pSize = Fireworks.rnd.RandomDouble(0.2, 4.0);
-            pAge = Fireworks.rnd.RandomDouble(2.0, 12.0);
-            p = new Particle(position, dir * Fireworks.rnd.RandomDouble(0.2, 0.8), Particle.Type.Shrapnel, up,
-                                  new Vector3(Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f)),
-                                  pSize, time, pAge);
-            fw.AddParticle(p);
-            probability -= 1.0;
-          }
+            dt = time - simTime;
+            probability = 0.02 * dt * frequency;
+
+            // Generates new particles for the [simTime-time] interval:
+            while (probability > 1.0 || Fireworks.rnd.UniformNumber() < probability)
+            {
+              // Emit a new particle:
+              dir = Geometry.RandomDirectionNormal(Fireworks.rnd, aim, fw.variance);         // Random direction around 'aim'
+              pSize = Fireworks.rnd.RandomDouble(0.2, 4.0);
+              pAge = Fireworks.rnd.RandomDouble(2.0, 12.0);
+              p = new Particle(position, dir * Fireworks.rnd.RandomDouble(0.2, 0.8), Particle.Type.Shrapnel, up,
+                                    new Vector3(Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f)),
+                                    pSize, time, pAge);
+              fw.AddParticle(p);
+              probability -= 1.0;
+            }
+          }          
           break;
         case Type.Main:
           dt = time - timeOfLastLaunch;
@@ -577,6 +580,11 @@ namespace _087fireworks
     public int MaxLaunchers => 20;
 
     /// <summary>
+    /// Should background launchers (the constant streams) be launching new particles?
+    /// </summary>
+    public bool backgroundLaunchersOn;
+
+    /// <summary>
     /// Possible rotation axes. Axis y is 'up'.
     /// </summary>
     public enum Axes { x, y, z }
@@ -756,6 +764,12 @@ namespace _087fireworks
       l = new Launcher(freq, Launcher.Type.Explosive, new Vector3d(2.0, 0.0, -6.0));
       AddLauncher(l);
 
+      // Background launchers:
+      l = new Launcher(freq, Launcher.Type.Background, new Vector3d(-7.0, 0.0, 2.3));
+      AddLauncher(l);
+      l = new Launcher(freq, Launcher.Type.Background, new Vector3d(7.0, 0.0, 2.3));
+      AddLauncher(l);
+
       Frames = 0;
       Time = 0.0f;
       Running = true;
@@ -821,6 +835,11 @@ namespace _087fireworks
       bool dyn = false;
       if (Util.TryParse(p, "dynamic", ref dyn))
         particleDynamic = dyn;
+
+      // launchers: background launchers on / off
+      bool streams = true;
+      if (Util.TryParse(p, "streams", ref streams))
+       backgroundLaunchersOn = streams;
     }
 
     public void AddLauncher (Launcher la)
@@ -1025,8 +1044,8 @@ namespace _087fireworks
     static void InitParams (out string param, out string tooltip, out string name, out MouseButtons trackballButton, out Vector3 center, out float diameter,
                             out bool useTexture, out bool globalColor, out bool useNormals, out bool usePtSize)
     {
-      param           = "freq=4000.0,max=60000,slow=0.25,dynamic=1,variance=0.1,ticks=0";
-      tooltip         = "freq,max,slow,dynamic,variance,ticks,screencast";
+      param           = "freq=4000.0,max=60000,slow=0.25,dynamic=1,variance=0.1,ticks=0,streams=1";
+      tooltip         = "freq,max,slow,dynamic,variance,ticks,screencast,rainbow_launchers_on";
       trackballButton = MouseButtons.Left;
       center          = new Vector3(0.0f, 1.0f, 0.0f);
       diameter        = 5.0f;
