@@ -443,6 +443,10 @@ namespace _087fireworks
       for (int i = 0; i < shrapnelParticlesCount; i++)
       {
         Fireworks.rnd.UniformDirection(-1.0, 1.0, out dir);
+        if (Fireworks.rnd.UniformNumber() > 0.95)
+        {
+          dir *= 1.25;
+        }
         shrapnelColor = colors[Fireworks.rnd.RandomInteger(0, colors.Length - 1)];
         age = Fireworks.rnd.RandomDouble(1.0, 2.0);
         if (longer)
