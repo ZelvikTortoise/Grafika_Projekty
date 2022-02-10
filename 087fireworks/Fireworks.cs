@@ -110,8 +110,8 @@ namespace _087fireworks
               dir = Geometry.RandomDirectionNormal(Fireworks.rnd, aim, fw.variance);         // Random direction around 'aim'
               pSize = Fireworks.rnd.RandomDouble(0.2, 4.0);
               pAge = Fireworks.rnd.RandomDouble(2.0, 12.0);
-              p = new Particle(position, dir * Fireworks.rnd.RandomDouble(0.2, 0.8), Particle.Type.Shrapnel, up,
-                                    new Vector3(Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f)),
+              p = new Particle(position, dir * Fireworks.rnd.RandomDouble(2.0, 6.0), Particle.Type.Shrapnel, up,
+                fw.onlyWhite ? new Vector3(1.0f, 1.0f, 1.0f) : new Vector3(Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f)),
                                     pSize, time, pAge);
               fw.AddParticle(p);
               probability -= 1.0;
@@ -144,7 +144,7 @@ namespace _087fireworks
       position = pos ?? Vector3d.Zero;
       aim = _aim ?? new Vector3d(0.1, 1.0, -0.1);
       aim.Normalize();
-      up = _up ?? new Vector3d(0.5, 0.0, 0.5);
+      up = _up ?? new Vector3d(0, 0.5, 0);
       up.Normalize();
       frequency = freq;      // number of emitted particles per second
       simTime = 0.0;
@@ -377,32 +377,36 @@ namespace _087fireworks
 
         if (fw.particleDynamic)
         {
-          velocity += dt * -0.05 * up;
-          double extinction = Math.Pow(0.9, dt);
-          size *= extinction;
-          color *= (float)extinction;
-        }
-
-        if (type != Type.Trail)
-        {
-          dir = new Vector3d(0.0, 0.0, 0.0);
-          if (type == Type.Shrapnel)
+          if (type != Type.Main1 && type != Type.Main2 && type != Type.Main3 && type != Type.Explosive) // Unaffected
           {
-            age = 0.15;
+            // Gravity:
+            velocity += dt * fw.gravity * up;
+
+            // Wind:
+            velocity += dt * fw.wind;
+          }
+
+          // Trail:
+          if (type != Type.Trail)
+          {
+            dir = new Vector3d(0.0, 0.0, 0.0);
+            if (type == Type.Shrapnel)
+            {
+              age = 0.15;
+            }
+            else
+            {
+              age = 0.25;
+            }
+            p = new Particle(position, dir, Particle.Type.Trail, up, 0.4f * color, 0.8 * size, time, age);
+            fw.AddParticle(p);
           }
           else
           {
-            age = 0.25;
+            size *= 0.95;
+            color *= 0.95f;
           }
-          p = new Particle(position, dir, Particle.Type.Trail, up, 0.4f * color, 0.8 * size, time, age);
-          fw.AddParticle(p);
         }
-        else if (type == Type.Trail)
-        {
-          size *= 0.95;
-          color *= 0.95f;
-        }
-
 
         simTime = time;
 
@@ -443,7 +447,7 @@ namespace _087fireworks
         age = Fireworks.rnd.RandomDouble(1.0, 2.0);
         if (longer)
         {
-          age += 2.0;
+          age += 1.0;
         }
 
         p = new Particle(position, dir, Type.Shrapnel, up, shrapnelColor, shrapnelSize, time, age);
@@ -577,7 +581,12 @@ namespace _087fireworks
     /// <summary>
     /// This limit is used for render-buffer allocation.
     /// </summary>
-    public int MaxLaunchers => 20;
+    public int MaxLaunchers => 20;    
+
+    /// <summary>
+    /// Possible rotation axes. Axis y is 'up'.
+    /// </summary>
+    public enum Axes { x, y, z }
 
     /// <summary>
     /// Should background launchers (the constant streams) be launching new particles?
@@ -585,9 +594,19 @@ namespace _087fireworks
     public bool backgroundLaunchersOn;
 
     /// <summary>
-    /// Possible rotation axes. Axis y is 'up'.
+    /// Background launchers launch only white particles.
     /// </summary>
-    public enum Axes { x, y, z }
+    public bool onlyWhite;
+
+    /// <summary>
+    /// Gravitational acceleration in direction of -up.
+    /// </summary>
+    public double gravity = -0.65;
+
+    /// <summary>
+    /// Strength and direction of wind.
+    /// </summary>
+    public Vector3d wind;    
 
     /// <summary>
     /// Possible color sets for explosive firework rockets.
@@ -840,6 +859,18 @@ namespace _087fireworks
       bool streams = true;
       if (Util.TryParse(p, "streams", ref streams))
        backgroundLaunchersOn = streams;
+
+      // launchers: background launchers only white
+      bool white = false;
+      if (Util.TryParse(p, "white", ref white))
+        onlyWhite = white;
+
+      // global: windX, windY, windZ
+      double windX = 0.0;
+      double windY = 0.0;
+      double windZ = 0.0;
+      if (Util.TryParse(p, "windX", ref windX) && Util.TryParse(p, "windX", ref windY) && Util.TryParse(p, "windX", ref windZ))
+        wind = new Vector3d(windX, windY, windZ);      
     }
 
     public void AddLauncher (Launcher la)
@@ -875,10 +906,6 @@ namespace _087fireworks
       bool oddFrame = (Frames & 1) > 0;
 
       // TODO simulation:
-      // Simulate()
-      // Dědičnost, různé typy launcherů, částic
-      // Vystřelování, ...
-      // Trails
 
       // Simulating the main launchers (forming regular tetrahedron):
       if (oddFrame)
@@ -1044,8 +1071,8 @@ namespace _087fireworks
     static void InitParams (out string param, out string tooltip, out string name, out MouseButtons trackballButton, out Vector3 center, out float diameter,
                             out bool useTexture, out bool globalColor, out bool useNormals, out bool usePtSize)
     {
-      param           = "freq=4000.0,max=60000,slow=0.25,dynamic=1,variance=0.1,ticks=0,streams=1";
-      tooltip         = "freq,max,slow,dynamic,variance,ticks,screencast,rainbow_launchers_on";
+      param           = "freq=4000.0,max=60000,slow=0.25,dynamic=1,variance=0.1,ticks=0,streams=1,white=0,windX=-0.1,windY=-0.03,windZ=0.0";
+      tooltip         = "freq,max,slow,dynamic,variance,ticks,screencast,background_launchers_on,bl_launch_only_white,wind";
       trackballButton = MouseButtons.Left;
       center          = new Vector3(0.0f, 1.0f, 0.0f);
       diameter        = 5.0f;
