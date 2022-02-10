@@ -79,7 +79,6 @@ namespace _087fireworks
       double pSize, pAge;
       double dt, probability;
 
-      // TODO launchers:
       switch (type)
       {
         case Type.Explosive:
@@ -91,9 +90,10 @@ namespace _087fireworks
             pSize = Fireworks.rnd.RandomDouble(2.0, 6.0);
             pAge = Fireworks.rnd.RandomDouble(3.0, 8.0);
             p = new Particle(position, dir, Particle.Type.Explosive, up,
-                                    new Vector3(1.0f, 0.5f, 0.0f), // Color
+                                    new Vector3(1.0f, 0.5f, 0.0f),
                                     pSize, time, pAge);
             fw.AddParticle(p);
+            p.Explode(fw, time, position, 10, 20, 0.1, false, true, new Vector3[] { new Vector3(1.0f, 0.5f, 0.0f) });
             timeOfLastLaunch = time;
           }          
           break;
@@ -123,9 +123,7 @@ namespace _087fireworks
           if (time - timeOfLastLaunch > 20.0f * (4000 / frequency))
           {
             dir = (-this.position + new Vector3d(0.0, 8.0, 0.0)) / 4.0;
-            p = new Particle(position, dir, Particle.Type.Main1, up,
-                                    new Vector3(1.0f, 0.25f, 0.0f), // Color
-                                    6.0, time, 2.0);
+            p = new Particle(position, dir, Particle.Type.Main1, up, new Vector3(1.0f, 0.25f, 0.0f), 6.0, time, 2.0);
             fw.AddParticle(p);
             timeOfLastLaunch = time;
           }          
@@ -331,8 +329,6 @@ namespace _087fireworks
         return true;
       }
 
-      // TODO particles
-
       if (time > maxAge)
       {
         // Particle dies.
@@ -345,21 +341,23 @@ namespace _087fireworks
             p = new Particle(position, new Vector3d(dir.X, 0.0f, dir.Z), Particle.Type.Main2, up,
                                     new Vector3(0.47f, 0.75f, 0.13f),
                                     6.0, time, 2.0);
-            fw.AddParticle(p);
+            Explode(fw, time, position, 100, 300, 0.1, false, false, new Vector3[] { color });
+            fw.AddParticle(p);            
             break;
           case Type.Main2:
             dir = new Vector3d(-0.5 * position.X, 1.0, -0.5 * position.Z);
             p = new Particle(position, dir, Particle.Type.Main3, up,
                                     new Vector3(1.0f, 1.0f, 0.0f),
                                     6.0, time, 2.0);
+            Explode(fw, time, position, 100, 300, 0.1, false, false, new Vector3[] { color });
             fw.AddParticle(p);
             break;
           case Type.Main3:
-            Explode(fw, time, position, 300, 500, 0.1, true, new Vector3[] { new Vector3(1.0f, 0.0f, 0.0f), new Vector3(1.0f, 0.25f, 0.0f), new Vector3(1.0f, 1.0f, 0.0f) });
+            Explode(fw, time, position, 300, 500, 0.1, true, false, new Vector3[] { new Vector3(1.0f, 0.0f, 0.0f), new Vector3(1.0f, 0.25f, 0.0f), new Vector3(1.0f, 1.0f, 0.0f) });
             break;
           case Type.Explosive:
             Vector3[] colors = GetRandomExplosiveColorSet(fw);            
-            Explode(fw, time, position, 100, 300, 0.1, false, colors);
+            Explode(fw, time, position, 100, 300, 0.1, false, false, colors);
             break;
         }        
 
@@ -416,7 +414,6 @@ namespace _087fireworks
 
     public Vector3[] GetRandomExplosiveColorSet(Fireworks fw)
     {
-      // Choosing a color set:
       return fw.possibleColorSets[Fireworks.rnd.RandomInteger(0, fw.possibleColorSets.Count - 1)];
     }
 
@@ -431,8 +428,9 @@ namespace _087fireworks
     /// <param name="maxShrapnel"></param>
     /// <param name="shrapnelSize"></param>
     /// <param name="longer"></param>
+    /// <param name="launcherAnimation"></param>
     /// <param name="colors"></param>
-    public void Explode(Fireworks fw, double time, Vector3d position, int minShrapnel, int maxShrapnel, double shrapnelSize, bool longer, Vector3[] colors)
+    public void Explode(Fireworks fw, double time, Vector3d position, int minShrapnel, int maxShrapnel, double shrapnelSize, bool longer, bool launcherAnimation, Vector3[] colors)
     {
       int shrapnelParticlesCount = Fireworks.rnd.RandomInteger(minShrapnel, maxShrapnel);
       Vector3d dir;
@@ -442,16 +440,20 @@ namespace _087fireworks
 
       for (int i = 0; i < shrapnelParticlesCount; i++)
       {
-        Fireworks.rnd.UniformDirection(-1.0, 1.0, out dir);
+        Fireworks.rnd.UniformDirection(launcherAnimation ? 0.0 : -1.0, 1.0, out dir);
         if (Fireworks.rnd.UniformNumber() > 0.95)
         {
           dir *= 1.25;
         }
         shrapnelColor = colors[Fireworks.rnd.RandomInteger(0, colors.Length - 1)];
         age = Fireworks.rnd.RandomDouble(1.0, 2.0);
-        if (longer)
+        if (launcherAnimation)
         {
-          age += 1.0;
+          age = 0.5;
+        }
+        else if (longer)
+        {
+          age += 2.0;
         }
 
         p = new Particle(position, dir, Type.Shrapnel, up, shrapnelColor, shrapnelSize, time, age);
@@ -469,7 +471,8 @@ namespace _087fireworks
     /// <param name="maxShrapnel"></param>
     /// <param name="shrapnelSize"></param>
     /// <param name="longer"></param>
-    public void Explode(Fireworks fw, double time, Vector3d position, int minShrapnel, int maxShrapnel, double shrapnelSize, bool longer)
+    /// <param name="launcherAnimation"></param>
+    public void Explode(Fireworks fw, double time, Vector3d position, int minShrapnel, int maxShrapnel, double shrapnelSize, bool longer, bool launcherAnimation)
     {
       int shrapnelParticlesCount = Fireworks.rnd.RandomInteger(minShrapnel, maxShrapnel);
       Vector3d dir;
@@ -479,10 +482,18 @@ namespace _087fireworks
 
       for (int i = 0; i < shrapnelParticlesCount; i++)
       {
-        Fireworks.rnd.UniformDirection(-1.0, 1.0, out dir);
+        Fireworks.rnd.UniformDirection(launcherAnimation ? 0.0 : -1.0, 1.0, out dir);
+        if (Fireworks.rnd.UniformNumber() > 0.95)
+        {
+          dir *= 1.25;
+        }
         shrapnelColor = new Vector3(Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f));
         age = Fireworks.rnd.RandomDouble(1.0, 2.0);
-        if (longer)
+        if (launcherAnimation)
+        {
+          age = 0.5;
+        }
+        else if (longer)
         {
           age += 2.0;
         }
@@ -754,15 +765,12 @@ namespace _087fireworks
     /// <param name="param">User-provided parameter string.</param>
     public void Reset(string param)
     {
-      // input params:
+      // Input parameters:
       Update(param);
 
-      // initialization job itself:
+      // Initializing:
       particles.Clear();
       launchers.Clear();
-
-      // TODO spawn launchers:
-
       Launcher l;
 
       // Main launchers (regular tetrahedron):
@@ -908,8 +916,6 @@ namespace _087fireworks
 
       int i;
       bool oddFrame = (Frames & 1) > 0;
-
-      // TODO simulation:
 
       // Simulating the main launchers (forming regular tetrahedron):
       if (oddFrame)
