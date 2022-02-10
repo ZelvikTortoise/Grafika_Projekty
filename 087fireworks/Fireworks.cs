@@ -331,6 +331,7 @@ namespace _087fireworks
         // Particle moves:
         Vector3d dir;
         Particle p;
+        double age;
 
         double dt = time - simTime;
         position += dt * velocity;
@@ -343,23 +344,24 @@ namespace _087fireworks
           color *= (float)extinction;
         }
 
-        if (type == Type.Main1 || type == Type.Main2 || type == Type.Main3)
+        if (type != Type.Trail)
         {
           dir = new Vector3d(0.0, 0.0, 0.0);
-          p = new Particle(position, dir, Particle.Type.Trail, up, 0.4f * color, 0.8 * size, time, 0.25);
+          if (type == Type.Shrapnel)
+          {
+            age = 0.15;
+          }
+          else
+          {
+            age = 0.25;
+          }
+          p = new Particle(position, dir, Particle.Type.Trail, up, 0.4f * color, 0.8 * size, time, age);
           fw.AddParticle(p);
         }
         else if (type == Type.Trail)
         {
-          if (size < 0.6)
-          {
-            return false;
-          }
-          else
-          {
-            size *= 0.95;
-            color *= 0.95f;
-          }          
+          size *= 0.95;
+          color *= 0.95f;
         }
 
 
@@ -677,12 +679,16 @@ namespace _087fireworks
 
       Launcher l;
 
+      // Main launchers (regular tetrahedron):
       l = new Launcher(freq, Launcher.Type.Main, new Vector3d(-4.0, 0.0, 2.3), null, new Vector3d(-0.5, 0.0, -0.5));
       AddLauncher(l);
       l = new Launcher(freq, Launcher.Type.Main, new Vector3d(4, 0.0, 2.3));
       AddLauncher(l);
       l = new Launcher(freq, Launcher.Type.Main, new Vector3d(0.0, 0.0, -4.6));
       AddLauncher(l);
+
+      // Explosive launchers:
+      // TODO ABC
 
       Frames = 0;
       Time = 0.0f;
