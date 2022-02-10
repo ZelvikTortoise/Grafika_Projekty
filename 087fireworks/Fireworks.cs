@@ -49,11 +49,6 @@ namespace _087fireworks
     static Vector3 color = new Vector3(1.0f, 0.4f, 0.2f);
 
     /// <summary>
-    /// Shared random generator. Should be Locked if used in multi-thread environment.
-    /// </summary>
-    static RandomJames rnd = new RandomJames();
-
-    /// <summary>
     /// Available types of launchers.
     /// </summary>
     public enum Type { Normal, Main, Background }
@@ -89,13 +84,13 @@ namespace _087fireworks
 
           double probability = dt * frequency;
           while (probability > 1.0 ||
-                 rnd.UniformNumber() < probability)
+                 Fireworks.rnd.UniformNumber() < probability)
           {
             // emit a new particle:
-            dir = Geometry.RandomDirectionNormal(rnd, aim, fw.variance);         // random direction around 'aim'
-            p = new Particle(position, dir * rnd.RandomDouble(0.2, 0.8), Particle.Type.Shrapnel, up,
-                                  new Vector3(rnd.RandomFloat(0.1f, 1.0f), rnd.RandomFloat(0.1f, 1.0f), rnd.RandomFloat(0.1f, 1.0f)),
-                                  rnd.RandomDouble(0.2, 4.0), time, rnd.RandomDouble(2.0, 12.0));
+            dir = Geometry.RandomDirectionNormal(Fireworks.rnd, aim, fw.variance);         // random direction around 'aim'
+            p = new Particle(position, dir * Fireworks.rnd.RandomDouble(0.2, 0.8), Particle.Type.Shrapnel, up,
+                                  new Vector3(Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f)),
+                                  Fireworks.rnd.RandomDouble(0.2, 4.0), time, Fireworks.rnd.RandomDouble(2.0, 12.0));
             fw.AddParticle(p);
             probability -= 1.0;
           }
@@ -312,9 +307,21 @@ namespace _087fireworks
         {
           dir = fw.Rotate3DVector(velocity, 0.5235987756, Fireworks.Axes.y);
           p = new Particle(position, new Vector3d(dir.X, 0.0f, dir.Z), Particle.Type.Main2, up,
-                                  new Vector3(0.81f, 0.98f, 0.02f),
+                                  new Vector3(0.47f, 0.75f, 0.13f),
                                   6.0, time, 2.0);
           fw.AddParticle(p);
+        }
+        else if (type == Type.Main2)
+        {
+          dir = new Vector3d(-0.5 * position.X, 1.0, -0.5 * position.Z);
+          p = new Particle(position, dir, Particle.Type.Main3, up,
+                                  new Vector3(1.0f, 1.0f, 0.0f),
+                                  6.0, time, 2.0);
+          fw.AddParticle(p);
+        }
+        else if (type == Type.Main3)
+        {
+
         }
 
         return false;
@@ -337,6 +344,16 @@ namespace _087fireworks
       simTime = time;
 
       return true;
+    }
+
+    public void Explode (Vector3d position, int minShrapnel, int maxShrapnel, Vector3d[] colors)
+    {
+
+    }
+
+    public void Explode(Vector3d position, int minShrapnel, int maxShrapnel)
+    {
+      
     }
 
     //--- rendering ---
@@ -534,6 +551,12 @@ namespace _087fireworks
       get;
       set;
     }
+
+        /// <summary>
+    /// Shared random generator. Should be Locked if used in multi-thread environment.
+    /// </summary>
+    public static RandomJames rnd = new RandomJames();
+
 
     /// <summary>
     /// Slow motion coefficient.
