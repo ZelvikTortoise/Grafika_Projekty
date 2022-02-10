@@ -881,7 +881,7 @@ namespace _087fireworks
       double windX = 0.0;
       double windY = 0.0;
       double windZ = 0.0;
-      if (Util.TryParse(p, "windX", ref windX) && Util.TryParse(p, "windX", ref windY) && Util.TryParse(p, "windX", ref windZ))
+      if (Util.TryParse(p, "windX", ref windX) && Util.TryParse(p, "windY", ref windY) && Util.TryParse(p, "windZ", ref windZ))
         wind = new Vector3d(windX, windY, windZ);      
     }
 
