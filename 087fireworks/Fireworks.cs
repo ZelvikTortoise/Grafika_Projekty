@@ -51,7 +51,7 @@ namespace _087fireworks
     /// <summary>
     /// Available types of launchers.
     /// </summary>
-    public enum Type { Normal, Main, Background }
+    public enum Type { Classic, Main, Background }
 
     /// <summary>
     /// Type of a launcher for distinguishing functions.
@@ -75,7 +75,7 @@ namespace _087fireworks
       // TODO launchers:
       switch (type)
       {
-        case Type.Normal:
+        case Type.Classic:
 
           break;
         case Type.Background:
@@ -238,7 +238,7 @@ namespace _087fireworks
     /// <summary>
     /// Available types of launchers.
     /// </summary>
-    public enum Type { Main1, Main2, Main3, Finish, Explosive, Shrapnel }
+    public enum Type { Main1, Main2, Main3, Explosive, Shrapnel, Trail }
 
     /// <summary>
     /// Type of a launcher for distinguishing functions.
@@ -321,39 +321,107 @@ namespace _087fireworks
         }
         else if (type == Type.Main3)
         {
-
+          Explode(fw, time, position, 500, 1000, 0.1, true, new Vector3[] { new Vector3(1.0f, 0.0f, 0.0f), new Vector3(1.0f, 0.25f, 0.0f), new Vector3(1.0f, 1.0f, 0.0f) });
         }
 
         return false;
       }
-      
-      // Particle moves:
-      double dt = time - simTime;
-      position += dt * velocity;
 
-      if (fw.particleDynamic)
       {
-        velocity += dt * -0.05 * up;
-        double extinction = Math.Pow(0.9, dt);
-        size *= extinction;
-        color *= (float)extinction;
+        // Particle moves:
+        Vector3d dir;
+        Particle p;
+
+        double dt = time - simTime;
+        position += dt * velocity;
+
+        if (fw.particleDynamic)
+        {
+          velocity += dt * -0.05 * up;
+          double extinction = Math.Pow(0.9, dt);
+          size *= extinction;
+          color *= (float)extinction;
+        }
+
+        if (type == Type.Main1 || type == Type.Main2 || type == Type.Main3)
+        {
+          dir = -0.1 * velocity;
+          p = new Particle(position, dir, Particle.Type.Trail, up, 0.4f * color, 0.8 * size, time, 0.25);
+          fw.AddParticle(p);
+        }
+
+
+        simTime = time;
+
+        return true;
+      }      
+    }
+
+    /// <summary>
+    /// Generates a spherical explosion of particles of randomized colors from the given set.
+    /// </summary>
+    /// <param name="fw"></param>
+    /// <param name="time"></param>
+    /// <param name="position"></param>
+    /// <param name="minShrapnel"></param>
+    /// <param name="maxShrapnel"></param>
+    /// <param name="shrapnelSize"></param>
+    /// <param name="longer"></param>
+    /// <param name="colors"></param>
+    public void Explode (Fireworks fw, double time, Vector3d position, int minShrapnel, int maxShrapnel, double shrapnelSize, bool longer, Vector3[] colors)
+    {
+      int shrapnelParticlesCount = Fireworks.rnd.RandomInteger(minShrapnel, maxShrapnel);
+      Vector3d dir;
+      Vector3 shrapnelColor;
+      Particle p;
+      double age;
+
+      for (int i = 0; i < shrapnelParticlesCount; i++)
+      {
+        Fireworks.rnd.UniformDirection(-1.0, 1.0, out dir);
+        shrapnelColor = colors[Fireworks.rnd.RandomInteger(0, colors.Length - 1)];
+        age = Fireworks.rnd.RandomDouble(1.0, 2.0);
+        if (longer)
+        {
+          age += 2.0;
+        }
+
+        p = new Particle(position, dir, Type.Shrapnel, up, shrapnelColor, shrapnelSize, time, age);
+        fw.AddParticle(p);
       }
-
-
-
-      simTime = time;
-
-      return true;
     }
 
-    public void Explode (Vector3d position, int minShrapnel, int maxShrapnel, Vector3d[] colors)
+    /// <summary>
+    /// Generates a spherical explosion of particles of randomized visible colors.
+    /// </summary>
+    /// <param name="fw"></param>
+    /// <param name="time"></param>
+    /// <param name="position"></param>
+    /// <param name="minShrapnel"></param>
+    /// <param name="maxShrapnel"></param>
+    /// <param name="shrapnelSize"></param>
+    /// <param name="longer"></param>
+    public void Explode(Fireworks fw, double time, Vector3d position, int minShrapnel, int maxShrapnel, double shrapnelSize, bool longer)
     {
+      int shrapnelParticlesCount = Fireworks.rnd.RandomInteger(minShrapnel, maxShrapnel);
+      Vector3d dir;
+      Vector3 shrapnelColor;
+      Particle p;
+      double age;
 
-    }
+      for (int i = 0; i < shrapnelParticlesCount; i++)
+      {
+        Fireworks.rnd.UniformDirection(-1.0, 1.0, out dir);
+        shrapnelColor = new Vector3(Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f), Fireworks.rnd.RandomFloat(0.1f, 1.0f));
+        age = Fireworks.rnd.RandomDouble(1.0, 2.0);
+        if (longer)
+        {
+          age += 2.0;
+        }
 
-    public void Explode(Vector3d position, int minShrapnel, int maxShrapnel)
-    {
-      
+        p = new Particle(position, dir, Type.Shrapnel, up, shrapnelColor, shrapnelSize, time, age);
+        fw.AddParticle(p);
+      }
     }
 
     //--- rendering ---
