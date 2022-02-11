@@ -22,7 +22,7 @@ namespace Modules
     /// <summary>
     /// Author's full name (SurnameFirstname).
     /// </summary>
-    public override string Author => "PelikanJosef";
+    public override string Author => "MacekLukas";
 
     /// <summary>
     /// Name of the module (short enough to fit inside a list-boxes, etc.).
@@ -78,6 +78,7 @@ namespace Modules
         return sc;
       };
 
+      /*/
       // R <-> B channel swap with weights.
       f.pixelTransform0 = (
         in ImageContext ic,
@@ -96,6 +97,7 @@ namespace Modules
         // Output color was modified.
         return true;
       };
+       /*/
 
       // Test create function: sinc(r^2)
       f.pixelCreate = (
@@ -104,6 +106,8 @@ namespace Modules
         out float G,
         out float B) =>
       {
+
+        /*/
         // [x, y] in {0, 1]
         double x = ic.x / (double)Math.Max(1, ic.width  - 1);
         double y = ic.y / (double)Math.Max(1, ic.height - 1);
@@ -132,12 +136,15 @@ namespace Modules
         // Periodic function of r^2.
         double rr = x * x + y * y;
         bool odd = ((int)Math.Round(rr) & 1) > 0;
+        /*/
 
         // Simple color palette (yellow, blue).
-        R = odd ? 0.0f : 1.0f;
+        R = 1.0f;
         G = R;
         B = 1.0f - R;
+        
       };
+
 
       return f;
     }
