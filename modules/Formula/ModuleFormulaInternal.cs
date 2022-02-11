@@ -151,6 +151,7 @@ namespace Modules
         if (antialiasing == 0)
           n = 1;
 
+        int width = n * ic.width;
         double mul = frequency / ic.width;
         long ord = 0L;
         double u, v, vv, uv;
@@ -158,6 +159,7 @@ namespace Modules
         float[] color1, color2;
         float r, g, b;
         int x, y;
+
 
         if (ic.context.TryGetValue("fg", out object fgo) &&
                 fgo is float[] fg)
@@ -190,7 +192,7 @@ namespace Modules
         for (int i = 0; i < n; i++)
         {
           y = n * ic.y + i;
-          v = frequency / y;
+          v = frequency / ic.y;
 
           for (int j = 0; j < n; j++)
           {
@@ -198,14 +200,13 @@ namespace Modules
 
             if (y > 0)
             {
-              u = mul * (x - ic.width / 2) / y;
+              u = mul * (x - width / 2) / y;
 
               ord = (long)(Math.Round(vv * v + uv * u) + Math.Round(uv * v - vv * u));
             }
 
             // Output color for one pixel of super sampling n x n.
-            // TODO: Change & 1L to something using n.
-            if (((ord / n) & 1L) == 0)
+            if ((ord & 1L) == 0)
             {
               colorNum1++;
             }
