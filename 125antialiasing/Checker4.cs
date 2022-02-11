@@ -32,7 +32,7 @@ formula.contextCreate = (in Bitmap input, in string param) =>
   if (Util.TryParse(p, "fg", ref R, ref G, ref B, ';'))
     sc["fg"] = new float[] { R, G, B };
 
-  sc["tooltip"] = "freq=<float> .. frequency for image generation (default=500)\r" +
+  sc["tooltip"] = "freq=<float> .. frequency for image generation\r" +
                   "bg=[R;G;B] .. bacground color\r" +
                   "fg=[R;G;B] .. foreground color\r" +
                   "angle=<float> .. pattern angle in degrees\r" + 
@@ -90,6 +90,7 @@ formula.pixelCreate = (
   if (antialiasing == 0)
     n = 1;
 
+  int width = n * ic.width;
   double mul = frequency / ic.width;
   long ord = 0L;
   double u, v, vv, uv;
@@ -130,8 +131,8 @@ formula.pixelCreate = (
 
       if (y > 0)
       {
-        u = mul * (x - ic.width / 2) / y;
-        v = frequency / y;
+        u = mul * (x - width / 2) / y;
+        v = frequency / ic.y;
 
         vv = 1.0;
         Util.TryParse(ic.context, "vv", ref vv);
@@ -143,8 +144,7 @@ formula.pixelCreate = (
       }
 
       // Output color for one pixel of super sampling n x n.
-      // TODO: Change & 1L to something using n.
-      if ((ord / n & 1L) == 0)
+      if ((ord & 1L) == 0)
       {
         colorNum1++;        
       }
@@ -156,7 +156,7 @@ formula.pixelCreate = (
   }
 
   // RGB of [x, y]:  
-  R = (colorNum1 / (n * n)) * color1.X + (colorNum2 / (n * n)) * color2.X;
-  G = (colorNum1 / (n * n)) * color1.Y + (colorNum2 / (n * n)) * color2.Y;
-  B = (colorNum1 / (n * n)) * color1.Z + (colorNum2 / (n * n)) * color2.Z;
+  R = (1.0 * colorNum1 / (n * n)) * color1.X + (1.0 * colorNum2 / (n * n)) * color2.X;
+  G = (1.0 * colorNum1 / (n * n)) * color1.Y + (1.0 * colorNum2 / (n * n)) * color2.Y;
+  B = (1.0 * colorNum1 / (n * n)) * color1.Z + (1.0 * colorNum2 / (n * n)) * color2.Z;
 };
