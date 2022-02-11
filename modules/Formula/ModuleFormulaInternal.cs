@@ -17,8 +17,7 @@ namespace Modules
     /// </summary>
     public ModuleFormulaInternal ()
     {
-      // TODO: Change to fast.
-      param = "slow,create,wid=640,hei=480,freq=5000,bg=[0.0;0.0;0.0],fg=[1.0;1.0;1.0],angle=45,antialias=0,sample=2";
+      param = "fast,create,wid=640,hei=480,freq=5000,bg=[0.0;0.0;0.0],fg=[1.0;1.0;1.0],angle=45,antialias=0,sample=2";
     }
 
     /// <summary>

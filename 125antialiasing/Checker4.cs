@@ -156,7 +156,7 @@ formula.pixelCreate = (
   }
 
   // RGB of [x, y]:  
-  R = (1.0 * colorNum1 / (n * n)) * color1.X + (1.0 * colorNum2 / (n * n)) * color2.X;
-  G = (1.0 * colorNum1 / (n * n)) * color1.Y + (1.0 * colorNum2 / (n * n)) * color2.Y;
-  B = (1.0 * colorNum1 / (n * n)) * color1.Z + (1.0 * colorNum2 / (n * n)) * color2.Z;
+  R = (1.0f * colorNum1 / (n * n)) * color1.X + (1.0f * colorNum2 / (n * n)) * color2.X;
+  G = (1.0f * colorNum1 / (n * n)) * color1.Y + (1.0f * colorNum2 / (n * n)) * color2.Y;
+  B = (1.0f * colorNum1 / (n * n)) * color1.Z + (1.0f * colorNum2 / (n * n)) * color2.Z;
 };
