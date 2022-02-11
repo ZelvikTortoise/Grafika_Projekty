@@ -1,6 +1,6 @@
 // Text params -> script context.
 // Any global pre-processing is allowed here.
-// fast,create,script=Checker4.cs,wid=640,hei=480,fg=[1.0;0.9;0.5],freq=5000,angle=45
+// fast,create,script=Checker4.cs,wid=640,hei=480,bg=[0.0;0.0;0.0],fg=[1.0;1.0;1.0],freq=5000,angle=45,antialias=0,sample=2
 formula.contextCreate = (in Bitmap input, in string param) =>
 {
   if (string.IsNullOrEmpty(param))
@@ -36,17 +36,28 @@ formula.contextCreate = (in Bitmap input, in string param) =>
                   "bg=[R;G;B] .. bacground color\r" +
                   "fg=[R;G;B] .. foreground color\r" +
                   "angle=<float> .. pattern angle in degrees\r" + 
-                  "antialias=<bool> .. antialiasing on/off\r" +
+                  "antialias=<int> .. antialiasing: 0=off,1=on\r" +
                   "sample=<int> .. supersampling: sample x sample";
 
-  // antialias=<bool>
-  bool antialias = false;
+  // antialias=<int>
+  int antialias = 0;
   if (Util.TryParse(p, "antialias", ref antialias))
+  {
+    if (antialias > 0)
+    {
+      antialias = 1;
+    }
+    else
+    {
+      antialias = 0;
+    }
     sc["antialias"] = antialias;
+  }
+    
 
   // sample=<int>
   int sample = 2;
-   if (Util.TryParse(p, "sample", ref sample)
+   if (Util.TryParse(p, "sample", ref sample))
    {
       if (sample < 2)
       {
@@ -54,7 +65,6 @@ formula.contextCreate = (in Bitmap input, in string param) =>
       }
       sc["sample"] = sample;
    }
-
 
   return sc;
 };
@@ -71,29 +81,57 @@ formula.pixelCreate = (
   Util.TryParse(ic.context, "freq", ref frequency);
 
   // Do we want antialiasing:
-  bool antialiasing = false;
+  int antialiasing = 0;
   Util.TryParse(ic.context, "antialias", ref antialiasing);
 
   // Sample size of the super sampling:
   int n = 2;
   Util.TryParse(ic.context, "sample", ref n);
-  if (!antialiasing)
+  if (antialiasing == 0)
     n = 1;
 
   double mul = frequency / ic.width;
   long ord = 0L;
   double u, v, vv, uv;
-  int color1, color2;  
+  int colorNum1 = 0, colorNum2 = 0;
+  Vector3 color1, color2;
+  float r, g, b;
+  int x, y;
+
+  if (ic.context.TryGetValue("fg", out object fgo) &&
+          fgo is float[] fg)
+  {
+    r = fg[0];
+    g = fg[1];
+    b = fg[2];
+  }
+  else
+    r = g = b = 1.0f;
+  color1 = new Vector3(r, g, b);
+
+  if (ic.context.TryGetValue("bg", out object bgo) &&
+            bgo is float[] bg)
+  {
+    r = bg[0];
+    g = bg[1];
+    b = bg[2];
+  }
+  else
+    r = g = b = 0.0f;
+  color2 = new Vector3(r, g, b);
 
   for (int i = 0; i < n; i++)
   {
-     for (int j = 0; j < n; j++)
-     {      
+     y = n * ic.y + i;
 
-      if (ic.y > 0)
+     for (int j = 0; j < n; j++)
+     {
+      x = n * ic.x + j;
+
+      if (y > 0)
       {
-        u = mul * (ic.x - ic.width / 2) / ic.y;
-        v = frequency / ic.y;
+        u = mul * (x - ic.width / 2) / y;
+        v = frequency / y;
 
         vv = 1.0;
         Util.TryParse(ic.context, "vv", ref vv);
@@ -105,36 +143,20 @@ formula.pixelCreate = (
       }
 
       // Output color for one pixel of super sampling n x n.
-      if ((ord & 1L) == 0)
+      // TODO: Change & 1L to something using n.
+      if ((ord / n & 1L) == 0)
       {
-        color1++;        
+        colorNum1++;        
       }
       else
       {
-        color2++;
+        colorNum2++;
       }
     }
   }
-  // RGB of [x, y]:
-  // TODO: fg = ..., bg = ... => mix: (color1 / (n * n)) * fg + (color2 / (n * n)) * bg.
-  if (ic.context.TryGetValue("fg", out object fgo) &&
-            fgo is float[] fg)
-  {
-    R = fg[0];
-    G = fg[1];
-    B = fg[2];
-  }
-  else
-    R = G = B = 1.0f;
 
-  if (ic.context.TryGetValue("bg", out object bgo) &&
-            bgo is float[] bg)
-  {
-    R = bg[0];
-    G = bg[1];
-    B = bg[2];
-  }
-  else
-    R = G = B = 0.0f;
-
+  // RGB of [x, y]:  
+  R = (colorNum1 / (n * n)) * color1.X + (colorNum2 / (n * n)) * color2.X;
+  G = (colorNum1 / (n * n)) * color1.Y + (colorNum2 / (n * n)) * color2.Y;
+  B = (colorNum1 / (n * n)) * color1.Z + (colorNum2 / (n * n)) * color2.Z;
 };
