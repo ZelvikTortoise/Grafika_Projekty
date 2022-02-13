@@ -191,7 +191,7 @@ namespace Modules
         for (int i = 0; i < n; i++)
         {
           y = n * ic.y + i;
-          v = frequency / ic.y;
+          v = frequency * n / y;
 
           for (int j = 0; j < n; j++)
           {

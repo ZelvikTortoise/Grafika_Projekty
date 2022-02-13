@@ -1,6 +1,9 @@
 // Text params -> script context.
 // Any global pre-processing is allowed here.
 // fast,create,script=Checker4.cs,wid=640,hei=480,bg=[0.0;0.0;0.0],fg=[1.0;1.0;1.0],freq=5000,angle=45,antialias=0,sample=2
+// fast,create,script=Checker4.cs,wid=640,hei=480,bg=[0.0;0.0;0.0],fg=[1.0;1.0;1.0],freq=5000,angle=45,antialias=1,sample=16
+// fast,create,script=Checker4.cs,wid=800,hei=640,bg=[0.0;0.0;0.0],fg=[1.0;1.0;1.0],freq=500,angle=0,antialias=0,sample=2
+// fast,create,script=Checker4.cs,wid=800,hei=640,bg=[0.0;0.0;0.0],fg=[1.0;1.0;1.0],freq=500,angle=0,antialias=1,sample=64
 formula.contextCreate = (in Bitmap input, in string param) =>
 {
   if (string.IsNullOrEmpty(param))
@@ -132,7 +135,7 @@ formula.pixelCreate = (
       if (y > 0)
       {
         u = mul * (x - width / 2) / y;
-        v = frequency / ic.y;
+        v = frequency * n / y;
 
         vv = 1.0;
         Util.TryParse(ic.context, "vv", ref vv);
